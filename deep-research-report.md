@@ -1,8 +1,8 @@
-# ML‑Driven Multiscale Pipeline for HS‑Selective Peptide Design in a Simulated Neurovascular Environment
+# ML‑Driven Pipeline for HS‑Selective Peptide Design in a Simulated Neurovascular Environment
 
-## Executive summary
+## Overview
 
-A computational pipeline to design a peptide with **selective binding to heparan sulfate (HS)** in a **neurovascular (BBB/NVU) extracellular matrix (ECM) context** must be **multiscale**: molecular binding (affinity, selectivity, kinetics) is necessary but not sufficient, because the functional question is whether the peptide achieves **adequate HS site occupancy over time** under **diffusion, washout/clearance, and barrier constraints**. 
+A computational pipeline to design a peptide with **selective binding to heparan sulfate (HS)** in a **neurovascular (BBB/NVU) extracellular matrix (ECM) context** must be **multiscale**: molecular binding (affinity, selectivity, kinetics) is necessary but not sufficient, because the functional question is whether the peptide achieves **adequate HS site occupancy over time** under **diffusion, washout/clearance, toxicity, and barrier constraints**. 
 
 Two realities drive the architecture:
 
@@ -10,8 +10,6 @@ Two realities drive the architecture:
 - In neurovascular and neurodegenerative contexts, **HSPGs/HS can mediate binding and cellular uptake of proteopathic aggregates** (strong evidence exists for tau aggregate binding/uptake via HSPGs), so HS‑binding peptides require **explicit negative design** against misfolded aggregate panels. 
 
 A rigorous, scalable approach is a **Python‑first orchestration layer** that automates: (a) a curated HS/CS/DS oligo panel, (b) GAG‑aware docking as triage with benchmark calibration (protein–GAG docking performance varies widely across tools), (c) explicit‑solvent/ion MD refinement (salt sensitivity is central), (d) uncertainty‑calibrated ML surrogate models trained on simulation + sparse experimental kinetics labels, (e) multiobjective Bayesian optimization to maintain a Pareto frontier, and (f) a compartment or reaction–diffusion neurovascular transport model that maps kinetics into time‑dependent occupancy. 
-
-Because you **do not currently have a paper**, this report treats all “paper‑provided” fields as **TBD**, supplies a **plausible default v0 input set** (explicitly labeled as assumptions), and frames implementation as a **config‑driven GitHub‑ready project skeleton** that can be updated when a real paper/spec becomes available. 
 
 ## Objectives and deliverables
 
@@ -30,7 +28,7 @@ Because you **do not currently have a paper**, this report treats all “paper�
 - **Developability gate:** reduce peptide self‑aggregation and insolubility using established predictors (TANGO, AGGRESCAN, CamSol) as first‑pass filters before expensive modeling; these tools are widely cited for aggregation/solubility screening.  
 - **Toxicity gate (computational filter):** use an explicit toxicity/hemolysis risk predictor as a screening penalty (not a substitute for wet lab), supported by literature demonstrating modern sequence+structure ML toxicity models. 
 
-### Deliverables appropriate for a GitHub README
+### Deliverables
 
 - A **config‑driven pipeline** that generates candidate peptides, computes sequence descriptors, runs multi‑fidelity scoring (cheap → expensive), trains a surrogate with uncertainty, and proposes next candidates via multiobjective Bayesian optimization. 
 - Reproducible **data manifests** and versioned panels for HS/CS/DS oligos, off‑target proteins, and aggregate structures using programmatic access to primary/official sources. 
@@ -39,15 +37,11 @@ Because you **do not currently have a paper**, this report treats all “paper�
 
 ### Inputs that must be extracted from the user’s paper
 
-The following are **TBD until a paper/spec exists** and should be represented as required fields in configuration files:
-
 - Peptide sequence(s), modifications, length bounds, prohibited residues/chemistries  
 - Target neurovascular compartment and access route (luminal vs abluminal)  
 - Target HS structural hypothesis (which sulfation motifs and chain lengths matter)  
 - Required concentration and exposure time scales for modeling and assays  
 - Intended mechanism (competition/displacement vs blockade of aggregate docking vs occupancy thresholding)
-
-These are not “nice to have”; they determine HS panel composition, modeling geometry, and evaluation metrics. 
 
 ### Recommended default v0 inputs for initial computational work
 
@@ -59,7 +53,6 @@ Net charge is shown as an **approximate integer** assuming Lys/Arg = +1, Asp/Glu
 
 | ID | Sequence | Length | Approx. net charge | Modifications | Rationale (assumption) |
 |---|---:|---:|---:|---|---|
-| PaperLead‑1 | **TBD (from paper)** | TBD | TBD | TBD | Replace with paper-defined lead(s). |
 | P1 | AKRKRQGK | 8 | +5 | none | Short HS‑binding motif seed with polar spacer (Q) to reduce pure charge clustering. |
 | P2 | GRRGRKQK | 8 | +5 | none | Similar charge with altered spacing; probes sensitivity to motif ordering. |
 | P3 | KRGKRRQA | 8 | +5 | none | Adds alanine spacer; tests compact basic patch behavior. |
@@ -112,7 +105,7 @@ The vascular basement membrane is described as a network primarily composed of *
 
 ### Default concentration/time scale assumptions
 
-Because you requested “no invented values,” the repo should store these as **configurable priors** rather than hard-coded constants. For a v0 computational project, a reasonable practice is to define **log‑spaced concentration grids** and simulate **minutes→hours** occupancy under a small set of clearance regimes; BBB transport modeling literature supports using mechanistic models with parameter estimation rather than fixed universal constants. 
+Repo should store these as **configurable priors** rather than hard-coded constants. For a v0 computational project, a reasonable practice is to define **log‑spaced concentration grids** and simulate **minutes→hours** occupancy under a small set of clearance regimes; BBB transport modeling literature supports using mechanistic models with parameter estimation rather than fixed universal constants. 
 
 ## Modeling scope and computational methods
 
@@ -129,8 +122,6 @@ Because you requested “no invented values,” the repo should store these as *
 **Heparin ≠ HS:** solution scattering studies conclude that HS adopts conformations significantly distinct from heparin (HS can be longer/more bent and shows different flexibility), so relying on heparin alone can bias binding expectations.
 
 **Enhanced sampling / kinetics (finalists):** add enhanced sampling when unbinding/binding events are rare on standard MD timescales; reviews cover umbrella sampling/metadynamics families, and weighted ensemble methods are reviewed for rare-event kinetics estimation. 
-
-image_group{"layout":"carousel","aspect_ratio":"16:9","query":["heparan sulfate sulfation pattern diagram","vascular basement membrane laminin collagen IV nidogen heparan sulfate proteoglycans schematic","blood brain barrier neurovascular unit schematic"],"num_per_query":1}
 
 ### Neurovascular transport and occupancy modeling
 
@@ -177,7 +168,7 @@ Bayesian optimization is appropriate because experimental labels (SPR kinetics, 
 
 Uncertainty must be evaluated, not assumed. A benchmark study on uncertainty quantification methods for protein engineering evaluates UQ methods on FLIP tasks and assesses utility under distribution shift and for active learning/optimization. 
 
-### Suggested Pareto trade-off plots (no data required)
+### Suggested Pareto trade-off plots
 
 Design Pareto charts around decisions you actually need to make:
 
@@ -189,15 +180,6 @@ Design Pareto charts around decisions you actually need to make:
 These make “best peptide” a transparent multiobjective argument rather than a single-score gamble.
 
 ## Data sources, evaluation metrics, and validation strategy
-
-### Priority data sources
-
-Use primary/official sources as the backbone:
-
-- entity["organization","RCSB Protein Data Bank","structure database"] APIs (Search/Data) for structures, ligands, and metadata.  
-- entity["organization","UniProt Knowledgebase (UniProtKB)","protein sequence database"] API endpoints for protein sequences and annotations. 
-- entity["organization","GlyTouCan","international glycan repository"] for stable glycan accessions and WURCS-encoded structure registration/query. 
-- entity["organization","GlyGen","glycoinformatics knowledgebase"] for integrated glyco/protein relationships and harmonized metadata. 
 
 #### Data source comparison table
 
@@ -232,13 +214,9 @@ Minimum viable metric suite:
 | MMP activity assay | protease activity change | protease interference gate | fluorogenic peptide substrate methods are standard  |
 | Aggregate-binding assay | adsorption/colocalization | negative design objective | motivated by HSPG-mediated tau uptake evidence  |
 
-## Implementation plan for GitHub, compute, and milestones
+## Implementation plan
 
-### Python-first implementation guidance
-
-Python-first is the correct default because: (a) primary data ingestion is API-driven, (b) BO/UQ stacks are Python-native, and (c) major simulation/PDE stacks provide Python entry points with optimized backends. 
-
-Suggested repo backbone (README-friendly):
+Suggested repo backbone:
 
 - `configs/` (all assumptions and paper-derived values live here)
 - `data/manifests/` (versioned panels: HS/CS/DS, off-target proteins, aggregate structures)
