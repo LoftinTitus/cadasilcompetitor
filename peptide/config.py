@@ -13,9 +13,9 @@ HYDROPHOBIC_RESIDUES: Final[frozenset[str]] = frozenset({"A", "F", "I", "L", "M"
 POLAR_RESIDUES: Final[frozenset[str]] = frozenset({"C", "G", "H", "N", "P", "Q", "S", "T"})
 
 ALLOWED_FLANKING_RESIDUES: Final[tuple[str, ...]] = ("G", "Q", "S", "A")
-ALLOWED_SPACER_RESIDUES: Final[tuple[str, ...]] = ("G", "Q", "S", "A", "N")
+ALLOWED_SPACER_RESIDUES: Final[tuple[str, ...]] = ("G", "Q", "S", "A", "N", "T", "P")
 
-MAX_VARIANTS_PER_MOTIF: Final[int] = 24
+MAX_VARIANTS_PER_MOTIF: Final[int] = 200
 MAX_TOTAL_CANDIDATES: Final[int] = 10000
 
 MIN_ALLOWED_NET_CHARGE: Final[int] = 1

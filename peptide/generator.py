@@ -178,7 +178,7 @@ def generate_candidates_from_motifs(
     generated: list[PeptideCandidate] = []
 
     for motif in motifs:
-        core_limit = max(1, max_variants_per_motif // 3)
+        core_limit = max_variants_per_motif
         core_sequences = expand_pattern_motif(motif, max_variants=core_limit)
         motif_sequences: set[str] = set()
 
