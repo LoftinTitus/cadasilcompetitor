@@ -216,7 +216,7 @@ Minimum viable metric suite:
 
 ## Implementation plan
 
-Suggested repo backbone:
+Repo organization:
 
 - `configs/` (all assumptions and paper-derived values live here)
 - `data/manifests/` (versioned panels: HS/CS/DS, off-target proteins, aggregate structures)
