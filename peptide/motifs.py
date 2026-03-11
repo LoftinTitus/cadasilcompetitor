@@ -20,6 +20,11 @@ _CANONICAL_FIELDS: dict[str, set[str]] = {
 }
 
 _SUPPORTED_PATTERN_CHARS = set(ALLOWED_RESIDUES) | {"B", "X"}
+_ALIAS_TO_CANONICAL = {
+    alias: canonical_name
+    for canonical_name, aliases in _CANONICAL_FIELDS.items()
+    for alias in aliases
+}
 
 
 def _normalize_column_name(name: str) -> str:
@@ -32,10 +37,9 @@ def _canonicalize_row(row: dict[str, str]) -> dict[str, str]:
     canonical: dict[str, str] = {}
     for key, value in row.items():
         normalized_key = _normalize_column_name(key)
-        for canonical_name, aliases in _CANONICAL_FIELDS.items():
-            if normalized_key in aliases:
-                canonical[canonical_name] = value
-                break
+        canonical_name = _ALIAS_TO_CANONICAL.get(normalized_key)
+        if canonical_name:
+            canonical[canonical_name] = value
     return canonical
 
 
@@ -59,6 +63,14 @@ def _parse_bool(value: str | None) -> bool | None:
     if cleaned in {"false", "f", "no", "n", "0", "synthetic"}:
         return False
     return None
+
+
+def _build_motif_id(source: str | None, row_index: int) -> str:
+    if source:
+        stem = re.sub(r"[^A-Za-z0-9]+", "_", source.strip()).strip("_").lower()
+        if stem:
+            return f"{stem}_{row_index - 1:04d}"
+    return f"motif_{row_index - 1:04d}"
 
 
 def normalize_motif_pattern(pattern: str) -> str:
@@ -140,8 +152,10 @@ def load_seed_motifs(csv_path: str | Path) -> list[SeedMotif]:
             pattern_type = infer_pattern_type(normalized_pattern, row.get("pattern_type"))
             validate_supported_pattern(normalized_pattern, pattern_type)
 
-            motif_id = _coerce_optional_text(row.get("motif_id")) or f"motif_{len(motifs) + 1:04d}"
             source = _coerce_optional_text(row.get("source"))
+            motif_id = _coerce_optional_text(row.get("motif_id")) or _build_motif_id(
+                source, row_index
+            )
             notes = _coerce_optional_text(row.get("notes"))
             is_natural = _infer_is_natural(row)
 

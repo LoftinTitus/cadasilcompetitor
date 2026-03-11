@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# Importing configs for min/max props, what aa does what, etc.
 from .config import (
     MAX_BASIC_FRACTION,
     MAX_CONSECUTIVE_BASIC_RESIDUES,
@@ -35,102 +36,53 @@ def _make_result(filter_name: str, passed: bool, severity: str, message: str) ->
     )
 
 
-def filter_sequence_too_short(metadata: dict[str, object]) -> FilterResult:
-    length = int(metadata["length"])
-    passed = length >= PEPTIDE_MIN_LENGTH
+def _range_filter(
+    metadata: dict[str, object],
+    *,
+    field_name: str,
+    metric_name: str,
+    min_value: int | float | None = None,
+    max_value: int | float | None = None,
+    severity: str = "error",
+) -> FilterResult:
+    value = float(metadata[field_name])
+    if min_value is not None and value < min_value:
+        return _make_result(
+            f"{field_name}_out_of_range",
+            False,
+            severity,
+            f"{metric_name} {value:g} is below minimum {min_value:g}.",
+        )
+    if max_value is not None and value > max_value:
+        return _make_result(
+            f"{field_name}_out_of_range",
+            False,
+            severity,
+            f"{metric_name} {value:g} exceeds maximum {max_value:g}.",
+        )
     return _make_result(
-        "sequence_too_short",
-        passed,
-        "error",
-        f"Length {length} is below minimum {PEPTIDE_MIN_LENGTH}.",
+        f"{field_name}_out_of_range",
+        True,
+        severity,
+        f"{metric_name} {value:g} is within the allowed range.",
     )
 
 
-def filter_sequence_too_long(metadata: dict[str, object]) -> FilterResult:
-    length = int(metadata["length"])
-    passed = length <= PEPTIDE_MAX_LENGTH
-    return _make_result(
-        "sequence_too_long",
-        passed,
-        "error",
-        f"Length {length} exceeds maximum {PEPTIDE_MAX_LENGTH}.",
-    )
-
-
-def filter_net_charge_too_high(metadata: dict[str, object]) -> FilterResult:
-    charge = float(metadata["approx_net_charge"])
-    passed = charge <= MAX_ALLOWED_NET_CHARGE
-    return _make_result(
-        "net_charge_too_high",
-        passed,
-        "error",
-        f"Approximate net charge {charge:g} exceeds maximum {MAX_ALLOWED_NET_CHARGE}.",
-    )
-
-
-def filter_net_charge_too_low(metadata: dict[str, object]) -> FilterResult:
-    charge = float(metadata["approx_net_charge"])
-    passed = charge >= MIN_ALLOWED_NET_CHARGE
-    return _make_result(
-        "net_charge_too_low",
-        passed,
-        "error",
-        f"Approximate net charge {charge:g} is below minimum {MIN_ALLOWED_NET_CHARGE}.",
-    )
-
-
-def filter_basic_fraction_too_high(metadata: dict[str, object]) -> FilterResult:
-    fraction = float(metadata["basic_fraction"])
-    passed = fraction <= MAX_BASIC_FRACTION
-    return _make_result(
-        "basic_fraction_too_high",
-        passed,
-        "error",
-        f"Basic fraction {fraction:.2f} exceeds maximum {MAX_BASIC_FRACTION:.2f}.",
-    )
-
-
-def filter_hydrophobic_fraction_too_high(metadata: dict[str, object]) -> FilterResult:
-    fraction = float(metadata["hydrophobic_fraction"])
-    passed = fraction <= MAX_HYDROPHOBIC_FRACTION
-    return _make_result(
-        "hydrophobic_fraction_too_high",
-        passed,
-        "error",
-        f"Hydrophobic fraction {fraction:.2f} exceeds maximum {MAX_HYDROPHOBIC_FRACTION:.2f}.",
-    )
-
-
-def filter_basic_run_too_long(metadata: dict[str, object]) -> FilterResult:
-    longest_run = int(metadata["longest_basic_run"])
-    passed = longest_run <= MAX_CONSECUTIVE_BASIC_RESIDUES
-    return _make_result(
-        "basic_run_too_long",
-        passed,
-        "error",
-        f"Longest basic run {longest_run} exceeds maximum {MAX_CONSECUTIVE_BASIC_RESIDUES}.",
-    )
-
-
-def filter_hydrophobic_run_too_long(metadata: dict[str, object]) -> FilterResult:
-    longest_run = int(metadata["longest_hydrophobic_run"])
-    passed = longest_run <= MAX_CONSECUTIVE_HYDROPHOBIC_RESIDUES
-    return _make_result(
-        "hydrophobic_run_too_long",
-        passed,
-        "error",
-        f"Longest hydrophobic run {longest_run} exceeds maximum {MAX_CONSECUTIVE_HYDROPHOBIC_RESIDUES}.",
-    )
-
-
-def filter_repeated_identical_residue_run(metadata: dict[str, object]) -> FilterResult:
-    longest_run = int(metadata["longest_identical_run"])
-    passed = longest_run <= MAX_REPEATED_IDENTICAL_RESIDUE_RUN
-    return _make_result(
-        "repeated_identical_residue_run_too_long",
-        passed,
-        "error",
-        f"Longest identical residue run {longest_run} exceeds maximum {MAX_REPEATED_IDENTICAL_RESIDUE_RUN}.",
+def _max_filter(
+    metadata: dict[str, object],
+    *,
+    field_name: str,
+    metric_name: str,
+    max_value: int | float,
+    severity: str = "error",
+) -> FilterResult:
+    return _range_filter(
+        metadata,
+        field_name=field_name,
+        metric_name=metric_name,
+        min_value=None,
+        max_value=max_value,
+        severity=severity,
     )
 
 
@@ -178,15 +130,50 @@ def apply_all_filters(
 ) -> dict[str, object]:
     computed_metadata = metadata or compute_sequence_metadata(sequence)
     results = [
-        filter_sequence_too_short(computed_metadata),
-        filter_sequence_too_long(computed_metadata),
-        filter_net_charge_too_high(computed_metadata),
-        filter_net_charge_too_low(computed_metadata),
-        filter_basic_fraction_too_high(computed_metadata),
-        filter_hydrophobic_fraction_too_high(computed_metadata),
-        filter_basic_run_too_long(computed_metadata),
-        filter_hydrophobic_run_too_long(computed_metadata),
-        filter_repeated_identical_residue_run(computed_metadata),
+        _range_filter(
+            computed_metadata,
+            field_name="length",
+            metric_name="Length",
+            min_value=PEPTIDE_MIN_LENGTH,
+            max_value=PEPTIDE_MAX_LENGTH,
+        ),
+        _range_filter(
+            computed_metadata,
+            field_name="approx_net_charge",
+            metric_name="Approximate net charge",
+            min_value=MIN_ALLOWED_NET_CHARGE,
+            max_value=MAX_ALLOWED_NET_CHARGE,
+        ),
+        _max_filter(
+            computed_metadata,
+            field_name="basic_fraction",
+            metric_name="Basic fraction",
+            max_value=MAX_BASIC_FRACTION,
+        ),
+        _max_filter(
+            computed_metadata,
+            field_name="hydrophobic_fraction",
+            metric_name="Hydrophobic fraction",
+            max_value=MAX_HYDROPHOBIC_FRACTION,
+        ),
+        _max_filter(
+            computed_metadata,
+            field_name="longest_basic_run",
+            metric_name="Longest basic run",
+            max_value=MAX_CONSECUTIVE_BASIC_RESIDUES,
+        ),
+        _max_filter(
+            computed_metadata,
+            field_name="longest_hydrophobic_run",
+            metric_name="Longest hydrophobic run",
+            max_value=MAX_CONSECUTIVE_HYDROPHOBIC_RESIDUES,
+        ),
+        _max_filter(
+            computed_metadata,
+            field_name="longest_identical_run",
+            metric_name="Longest identical residue run",
+            max_value=MAX_REPEATED_IDENTICAL_RESIDUE_RUN,
+        ),
         filter_low_complexity(computed_metadata),
         filter_aggregation_risk(computed_metadata),
         filter_cpp_like_warning(computed_metadata),

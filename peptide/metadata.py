@@ -1,7 +1,6 @@
 """Pure sequence metadata helpers."""
 
 from __future__ import annotations
-
 from collections import Counter
 
 from .config import (
@@ -13,11 +12,17 @@ from .config import (
 )
 
 _CHARGE_TABLE = {"K": 1, "R": 1, "D": -1, "E": -1}
+_ALLOWED_RESIDUE_SET = set(ALLOWED_RESIDUES)
+
+
+def _normalized_sequence_parts(sequence: str) -> tuple[str, Counter[str], int]:
+    normalized = normalize_sequence(sequence)
+    return normalized, Counter(normalized), len(normalized)
 
 
 def normalize_sequence(sequence: str) -> str:
     normalized = "".join(sequence.split()).upper()
-    invalid_chars = sorted(set(normalized) - set(ALLOWED_RESIDUES))
+    invalid_chars = sorted(set(normalized) - _ALLOWED_RESIDUE_SET)
     if invalid_chars:
         raise ValueError(
             f"Sequence '{sequence}' contains unsupported residues: {', '.join(invalid_chars)}"
@@ -26,15 +31,12 @@ def normalize_sequence(sequence: str) -> str:
 
 
 def compute_residue_counts(sequence: str) -> dict[str, int]:
-    normalized = normalize_sequence(sequence)
-    counts = Counter(normalized)
+    _, counts, _ = _normalized_sequence_parts(sequence)
     return {residue: counts[residue] for residue in sorted(counts)}
 
 
 def compute_residue_fractions(sequence: str) -> dict[str, float]:
-    normalized = normalize_sequence(sequence)
-    length = len(normalized)
-    counts = compute_residue_counts(normalized)
+    _, counts, length = _normalized_sequence_parts(sequence)
     return {residue: count / length for residue, count in counts.items()}
 
 
@@ -91,11 +93,12 @@ def low_complexity_heuristic(sequence: str) -> bool:
 
 
 def compute_sequence_metadata(sequence: str) -> dict[str, object]:
-    normalized = normalize_sequence(sequence)
-    length = len(normalized)
-    residue_counts = compute_residue_counts(normalized)
-    residue_fractions = compute_residue_fractions(normalized)
-    basic_positions = positions_of_residues(normalized, BASIC_RESIDUES)
+    normalized, counts, length = _normalized_sequence_parts(sequence)
+    residue_counts = {residue: counts[residue] for residue in sorted(counts)}
+    residue_fractions = {residue: count / length for residue, count in residue_counts.items()}
+    basic_positions = [
+        index for index, residue in enumerate(normalized, start=1) if residue in BASIC_RESIDUES
+    ]
 
     hydrophobic_count = sum(residue_counts.get(residue, 0) for residue in HYDROPHOBIC_RESIDUES)
     polar_count = sum(residue_counts.get(residue, 0) for residue in POLAR_RESIDUES)
@@ -103,6 +106,10 @@ def compute_sequence_metadata(sequence: str) -> dict[str, object]:
     basic_count = sum(residue_counts.get(residue, 0) for residue in BASIC_RESIDUES)
 
     dominant_fraction = max(residue_counts.values()) / length
+    longest_identical_run = longest_identical_residue_run(normalized)
+    is_low_complexity = (
+        dominant_fraction >= 0.5 or len(residue_counts) <= 3 or longest_identical_run >= 4
+    )
 
     return {
         "sequence": normalized,
@@ -116,10 +123,10 @@ def compute_sequence_metadata(sequence: str) -> dict[str, object]:
         "acidic_fraction": acidic_count / length,
         "longest_basic_run": longest_consecutive_run(normalized, BASIC_RESIDUES),
         "longest_hydrophobic_run": longest_consecutive_run(normalized, HYDROPHOBIC_RESIDUES),
-        "longest_identical_run": longest_identical_residue_run(normalized),
+        "longest_identical_run": longest_identical_run,
         "basic_positions": basic_positions,
         "charge_spacing": spacing_between_positions(basic_positions),
-        "is_low_complexity": low_complexity_heuristic(normalized),
+        "is_low_complexity": is_low_complexity,
         "dominant_residue_fraction": dominant_fraction,
         "unique_residue_count": len(residue_counts),
     }

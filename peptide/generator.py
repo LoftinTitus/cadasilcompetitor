@@ -1,7 +1,6 @@
-"""Rule-based peptide candidate generation."""
+"""Rule-based peptide candidate generation. Does different things to the seed motifs to get a bunch of candidates, then applies filters and deduplicates."""
 
 from __future__ import annotations
-
 import itertools
 import random
 from collections import OrderedDict

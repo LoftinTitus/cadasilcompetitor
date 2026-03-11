@@ -1,11 +1,10 @@
 """Simple configuration constants for peptide generation."""
 
 from __future__ import annotations
-
 from typing import Final
 
 PEPTIDE_MIN_LENGTH: Final[int] = 8
-PEPTIDE_MAX_LENGTH: Final[int] = 20
+PEPTIDE_MAX_LENGTH: Final[int] = 30
 
 ALLOWED_RESIDUES: Final[tuple[str, ...]] = tuple("ACDEFGHIKLMNPQRSTVWY")
 BASIC_RESIDUES: Final[frozenset[str]] = frozenset({"K", "R"})
@@ -17,7 +16,7 @@ ALLOWED_FLANKING_RESIDUES: Final[tuple[str, ...]] = ("G", "Q", "S", "A")
 ALLOWED_SPACER_RESIDUES: Final[tuple[str, ...]] = ("G", "Q", "S", "A", "N")
 
 MAX_VARIANTS_PER_MOTIF: Final[int] = 24
-MAX_TOTAL_CANDIDATES: Final[int] = 500
+MAX_TOTAL_CANDIDATES: Final[int] = 10000
 
 MIN_ALLOWED_NET_CHARGE: Final[int] = 1
 MAX_ALLOWED_NET_CHARGE: Final[int] = 12
