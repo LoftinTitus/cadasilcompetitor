@@ -1,0 +1,5 @@
+physiology:
+  pH: 7.4
+  salt_concentration_mM: 150.0
+  temperature_K: 310.15
+  exposure_duration_s: 3600.0
