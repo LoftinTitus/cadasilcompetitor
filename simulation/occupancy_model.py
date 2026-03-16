@@ -1,20 +1,26 @@
-"""Occupancy model inputs derived from the shared physiology configuration."""
+"""Occupancy model inputs derived from the shared simulation configuration."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from core.config_loader import PhysiologyConfig
-from simulation.environment import build_environment_state
+from core.config_loader import CandidateProperties, PhysiologyConfig, SimulationConfig
+from simulation.environment import build_candidate_property_state, build_environment_state
 
 
 def prepare_occupancy_model_inputs(
     candidate: Any,
-    physiology_config: PhysiologyConfig,
+    simulation_config: SimulationConfig | PhysiologyConfig,
+    candidate_properties: CandidateProperties | None = None,
 ) -> dict[str, Any]:
-    environment = build_environment_state(physiology_config)
+    physiology = (
+        simulation_config.physiology
+        if isinstance(simulation_config, SimulationConfig)
+        else simulation_config
+    )
     return {
         "candidate": candidate,
-        "physiology": environment,
-        "exposure_duration_s": physiology_config.exposure_duration_s,
+        "environment": build_environment_state(simulation_config),
+        "candidate_properties": build_candidate_property_state(candidate_properties),
+        "exposure_duration_s": physiology.exposure_duration_s,
     }
