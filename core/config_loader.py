@@ -12,6 +12,11 @@ physiology:
   temperature_K: 310.15
   exposure_duration_s: 3600.0
 
+target:
+  compartment: glycocalyx
+  exposure_side: luminal
+  biological_rationale_label: endothelial_surface_hspg_engagement
+
 transport:
   flow_velocity_um_s: 100.0
   shear_stress_Pa: 1.5
@@ -30,7 +35,6 @@ degradation:
   degradation_enabled: true
 
 neurovascular_environment:
-  compartment_name: vascular_basement_membrane
   extracellular_matrix_density_fraction: 0.15
   hspg_site_density_per_um3: 500.0
   interstitial_pressure_mmHg: 2.0
@@ -41,6 +45,9 @@ Shared YAML fields and units:
 - physiology.salt_concentration_mM: millimolar
 - physiology.temperature_K: Kelvin
 - physiology.exposure_duration_s: seconds
+- target.compartment: one of glycocalyx, basement_membrane, perivascular_ecm
+- target.exposure_side: one of luminal, abluminal
+- target.biological_rationale_label: string label for screening intent
 - transport.flow_velocity_um_s: micrometers per second
 - transport.shear_stress_Pa: Pascal
 - transport.convective_washout_enabled: boolean flag
@@ -50,7 +57,6 @@ Shared YAML fields and units:
 - barrier.porosity_fraction: unitless fraction
 - barrier.reflection_coefficient: unitless fraction
 - degradation.degradation_enabled: boolean flag
-- neurovascular_environment.compartment_name: string label
 - neurovascular_environment.extracellular_matrix_density_fraction: unitless fraction
 - neurovascular_environment.hspg_site_density_per_um3: sites per cubic micrometer
 - neurovascular_environment.interstitial_pressure_mmHg: millimeters of mercury
@@ -73,6 +79,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+SUPPORTED_TARGET_COMPARTMENTS: tuple[str, ...] = (
+    "glycocalyx",
+    "basement_membrane",
+    "perivascular_ecm",
+)
+SUPPORTED_EXPOSURE_SIDES: tuple[str, ...] = ("luminal", "abluminal")
+
 
 @dataclass(frozen=True, slots=True)
 class PhysiologyConfig:
@@ -80,6 +93,13 @@ class PhysiologyConfig:
     salt_concentration_mM: float
     temperature_K: float
     exposure_duration_s: float
+
+
+@dataclass(frozen=True, slots=True)
+class TargetConfig:
+    compartment: str
+    exposure_side: str
+    biological_rationale_label: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,7 +129,6 @@ class DegradationConfig:
 
 @dataclass(frozen=True, slots=True)
 class NeurovascularEnvironmentConfig:
-    compartment_name: str
     extracellular_matrix_density_fraction: float
     hspg_site_density_per_um3: float
     interstitial_pressure_mmHg: float
@@ -119,6 +138,7 @@ class NeurovascularEnvironmentConfig:
 @dataclass(frozen=True, slots=True)
 class SimulationConfig:
     physiology: PhysiologyConfig
+    target: TargetConfig
     transport: TransportConfig
     binding: BindingConfig
     barrier: BarrierConfig
@@ -149,6 +169,10 @@ def load_simulation_config(path: str) -> SimulationConfig:
     return SimulationConfig(
         physiology=_build_physiology_config(
             _require_mapping(raw_config, "physiology", config_path),
+            config_path,
+        ),
+        target=_build_target_config(
+            _require_mapping(raw_config, "target", config_path),
             config_path,
         ),
         transport=_build_transport_config(
@@ -292,6 +316,33 @@ def _build_physiology_config(
     return physiology
 
 
+def _build_target_config(
+    section: dict[str, Any],
+    config_path: Path,
+) -> TargetConfig:
+    _require_fields(
+        section,
+        "target",
+        (
+            "compartment",
+            "exposure_side",
+            "biological_rationale_label",
+        ),
+        config_path,
+    )
+
+    target = TargetConfig(
+        compartment=_coerce_string(section["compartment"], "target.compartment"),
+        exposure_side=_coerce_string(section["exposure_side"], "target.exposure_side"),
+        biological_rationale_label=_coerce_string(
+            section["biological_rationale_label"],
+            "target.biological_rationale_label",
+        ),
+    )
+    _validate_target_config(target)
+    return target
+
+
 def _build_transport_config(
     section: dict[str, Any],
     config_path: Path,
@@ -410,7 +461,6 @@ def _build_neurovascular_environment_config(
         section,
         "neurovascular_environment",
         (
-            "compartment_name",
             "extracellular_matrix_density_fraction",
             "hspg_site_density_per_um3",
             "interstitial_pressure_mmHg",
@@ -420,10 +470,6 @@ def _build_neurovascular_environment_config(
     )
 
     neurovascular_environment = NeurovascularEnvironmentConfig(
-        compartment_name=_coerce_string(
-            section["compartment_name"],
-            "neurovascular_environment.compartment_name",
-        ),
         extracellular_matrix_density_fraction=_coerce_float(
             section["extracellular_matrix_density_fraction"],
             "neurovascular_environment.extracellular_matrix_density_fraction",
@@ -492,6 +538,19 @@ def _validate_physiology_config(physiology: PhysiologyConfig) -> None:
     if physiology.exposure_duration_s < 0.0:
         raise ConfigValidationError(
             "Field 'physiology.exposure_duration_s' must be greater than or equal to 0."
+        )
+
+
+def _validate_target_config(target: TargetConfig) -> None:
+    if target.compartment not in SUPPORTED_TARGET_COMPARTMENTS:
+        supported = ", ".join(SUPPORTED_TARGET_COMPARTMENTS)
+        raise ConfigValidationError(
+            f"Field 'target.compartment' must be one of: {supported}."
+        )
+    if target.exposure_side not in SUPPORTED_EXPOSURE_SIDES:
+        supported = ", ".join(SUPPORTED_EXPOSURE_SIDES)
+        raise ConfigValidationError(
+            f"Field 'target.exposure_side' must be one of: {supported}."
         )
 
 
