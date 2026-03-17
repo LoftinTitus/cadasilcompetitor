@@ -3,3 +3,31 @@ physiology:
   salt_concentration_mM: 150.0
   temperature_K: 310.15
   exposure_duration_s: 3600.0
+
+target:
+  compartment: glycocalyx
+  exposure_side: luminal
+  biological_rationale_label: endothelial_surface_hspg_engagement
+
+transport:
+  flow_velocity_um_s: 100.0
+  shear_stress_Pa: 1.5
+  convective_washout_enabled: true
+
+binding:
+  binding_site_density_per_um2: 1000.0
+  maximum_occupancy_fraction: 1.0
+
+barrier:
+  thickness_um: 2.0
+  porosity_fraction: 0.2
+  reflection_coefficient: 0.5
+
+degradation:
+  degradation_enabled: true
+
+neurovascular_environment:
+  extracellular_matrix_density_fraction: 0.15
+  hspg_site_density_per_um3: 500.0
+  interstitial_pressure_mmHg: 2.0
+  oxygen_fraction: 0.21

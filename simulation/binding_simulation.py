@@ -1,30 +1,45 @@
-"""Binding simulation entry points that accept shared physiology configuration.
+"""Binding simulation entry points that accept shared simulation configuration.
 
 The caller is responsible for loading the YAML once at the top level and then
-passing the resulting ``PhysiologyConfig`` into simulation functions:
+passing shared config and per-candidate computed properties into simulation
+functions:
 
-    physiology = load_physiology_config("config/physiology.yaml")
-    run_binding_simulation(candidate, physiology)
+    config = load_simulation_config("config/physiology.yaml")
+    candidate_properties = CandidateProperties(...)
+    run_binding_simulation(candidate, config, candidate_properties)
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from core.config_loader import PhysiologyConfig
-from simulation.environment import build_environment_state
+from core.config_loader import CandidateProperties, PhysiologyConfig, SimulationConfig
+from simulation.environment import (
+    build_candidate_property_state,
+    build_environment_state,
+    build_target_context,
+)
 from simulation.occupancy_model import prepare_occupancy_model_inputs
 
 
 def run_binding_simulation(
     candidate: Any,
-    physiology_config: PhysiologyConfig,
+    simulation_config: SimulationConfig | PhysiologyConfig,
+    candidate_properties: CandidateProperties | None = None,
 ) -> dict[str, Any]:
+    target_context = (
+        build_target_context(simulation_config.target)
+        if isinstance(simulation_config, SimulationConfig)
+        else None
+    )
     return {
         "candidate": candidate,
-        "environment": build_environment_state(physiology_config),
+        "environment": build_environment_state(simulation_config),
+        "target": target_context,
+        "candidate_properties": build_candidate_property_state(candidate_properties),
         "occupancy_model_inputs": prepare_occupancy_model_inputs(
             candidate,
-            physiology_config,
+            simulation_config,
+            candidate_properties,
         ),
     }
