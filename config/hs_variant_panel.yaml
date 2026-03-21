@@ -1,0 +1,323 @@
+schema_name: hs_variant_panel
+schema_version: 1
+panel_id: initial_hs_variant_panel_v1
+panel_name: Initial heparan sulfate variant panel
+panel_scope: hs_only
+source_status: assumption_based_seed_panel
+variants:
+  - variant_id: HS-dp4-NAc
+    display_name: HS dp4 NAc
+    gag_class: HS
+    panel_role: baseline_negative_control
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: no sulfation (heparosan-like)
+      n_sulfation_count: 0
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 0
+      total_sulfates: 0
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: residue_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GlcNAc
+        - GlcA
+        - GlcNAc
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 2
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -2
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: sequence_defined_accession_pending
+      atomistic_preparation_notes: resolve exact linkage stereochemistry and terminal chemistry before production docking or MD
+    simulation_annotations:
+      docking_role: negative_control
+      md_priority: low
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: low
+      benchmark_tags:
+        - charge_control
+        - unsulfated_reference
+      rationale: negative control for charge-driven binding
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: HS-dp4-NS
+    display_name: HS dp4 NS
+    gag_class: HS
+    panel_role: sulfation_dependency_probe
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: N-sulfation only
+      n_sulfation_count: 2
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 0
+      total_sulfates: 2
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: residue_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GlcNS
+        - GlcA
+        - GlcNS
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 2
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -4
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: sequence_defined_accession_pending
+      atomistic_preparation_notes: resolve exact linkage stereochemistry and terminal chemistry before production docking or MD
+    simulation_annotations:
+      docking_role: motif_probe
+      md_priority: medium
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: low_to_medium
+      benchmark_tags:
+        - n_sulfation_probe
+        - minimal_sulfation_reference
+      rationale: minimal sulfation motif used to test N-sulfation dependence
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: HS-dp4-NS-2S
+    display_name: HS dp4 NS 2S
+    gag_class: HS
+    panel_role: sulfation_position_probe
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: N-sulfation plus 2-O-sulfation
+      n_sulfation_count: 2
+      o2_sulfation_count: 2
+      o3_sulfation_count: 0
+      o6_sulfation_count: 0
+      total_sulfates: 4
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - IdoA2S
+        - GlcNS
+        - IdoA2S
+        - GlcNS
+      uronic_acid_composition:
+        GlcA: 0
+        IdoA: 0
+        IdoA2S: 2
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 2
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -6
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_accession_pending
+      atomistic_preparation_notes: confirm residue ordering and terminal stereochemistry before production docking or MD
+    simulation_annotations:
+      docking_role: motif_probe
+      md_priority: medium
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: medium
+      benchmark_tags:
+        - o2_sulfation_probe
+        - idoa2s_enriched
+      rationale: probes binding preferences linked to IdoA2S-containing HS motifs
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: HS-dp4-NS-6S
+    display_name: HS dp4 NS 6S
+    gag_class: HS
+    panel_role: sulfation_position_probe
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: N-sulfation plus 6-O-sulfation
+      n_sulfation_count: 2
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 2
+      total_sulfates: 4
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GlcNS6S
+        - GlcA
+        - GlcNS6S
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 2
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -6
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_accession_pending
+      atomistic_preparation_notes: confirm residue ordering and terminal stereochemistry before production docking or MD
+    simulation_annotations:
+      docking_role: motif_probe
+      md_priority: medium
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: medium
+      benchmark_tags:
+        - o6_sulfation_probe
+        - glucosamine_6o_sulfation_reference
+      rationale: probes 6-O-sulfation-driven binding preferences
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: HS-dp6-mixed
+    display_name: HS dp6 mixed
+    gag_class: HS
+    panel_role: heterogeneity_probe
+    chain_length:
+      degree_of_polymerization: 6
+      residue_count: 6
+      disaccharide_equivalents: 3.0
+      length_bucket: medium_oligo
+    sulfation_pattern:
+      label: mixed GlcA and IdoA with mixed N-, 2-O-, and 6-O-sulfation
+      n_sulfation_count: 2
+      o2_sulfation_count: 1
+      o3_sulfation_count: 0
+      o6_sulfation_count: 2
+      total_sulfates: 5
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GlcNS
+        - IdoA2S
+        - GlcNAc6S
+        - GlcA
+        - GlcNS6S
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 1
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 1
+        GlcNAc6S: 1
+        GlcNS6S: 1
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -8
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_accession_pending
+      atomistic_preparation_notes: treat as a representative mixed HS motif and resolve an exact residue-level structure before production docking or MD
+    simulation_annotations:
+      docking_role: heterogeneity_reference
+      md_priority: high
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: medium_to_high
+      benchmark_tags:
+        - heterogeneity_probe
+        - mixed_backbone_reference
+      rationale: representative heterogeneous HS sequence for binding models that should not be biased toward heparin-like uniformity
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: HS-dp5-AT-motif
+    display_name: HS dp5 AT motif
+    gag_class: HS
+    panel_role: anticoagulant_risk_sentinel
+    chain_length:
+      degree_of_polymerization: 5
+      residue_count: 5
+      disaccharide_equivalents: 2.5
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: antithrombin-like pentasaccharide motif with 3-O-sulfation
+      n_sulfation_count: 3
+      o2_sulfation_count: 1
+      o3_sulfation_count: 1
+      o6_sulfation_count: 3
+      total_sulfates: 8
+      contains_3_o_sulfation: true
+    structural_annotations:
+      definition_status: motif_defined
+      residue_sequence_template:
+        - unresolved_antithrombin_binding_pentasaccharide
+      uronic_acid_composition:
+        GlcA: 1
+        IdoA: 0
+        IdoA2S: 1
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 2
+        GlcNS3S: 0
+        GlcNS3S6S: 1
+      representative_formal_charge_at_ph_7_4: -10
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: exact_sequence_required
+      atomistic_preparation_notes: resolve the exact antithrombin-binding pentasaccharide sequence and WURCS accession before atomistic docking or MD
+    simulation_annotations:
+      docking_role: anticoagulant_risk_sentinel
+      md_priority: high
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: high
+      benchmark_tags:
+        - three_o_sulfation_sentinel
+        - anticoagulant_risk_reference
+      rationale: do-not-engage risk sentinel for peptides that may bind anticoagulant HS motifs
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel

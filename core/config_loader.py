@@ -158,6 +158,30 @@ class CandidateProperties:
     spontaneous_degradation_rate_per_s: float
 
 
+@dataclass(frozen=True, slots=True)
+class HSVariantConfig:
+    variant_id: str
+    display_name: str
+    gag_class: str
+    panel_role: str
+    chain_length: dict[str, Any]
+    sulfation_pattern: dict[str, Any]
+    structural_annotations: dict[str, Any]
+    simulation_annotations: dict[str, Any]
+    provenance: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class HSVariantPanelConfig:
+    schema_name: str
+    schema_version: int
+    panel_id: str
+    panel_name: str
+    panel_scope: str
+    source_status: str
+    variants: tuple[HSVariantConfig, ...]
+
+
 class ConfigValidationError(ValueError):
     """Raised when configuration values or candidate properties are invalid."""
 
@@ -205,6 +229,12 @@ def load_physiology_config(path: str) -> PhysiologyConfig:
         _require_mapping(raw_config, "physiology", config_path),
         config_path,
     )
+
+
+def load_hs_variant_panel(path: str) -> HSVariantPanelConfig:
+    config_path = Path(path)
+    raw_config = _load_root_mapping(config_path)
+    return _build_hs_variant_panel_config(raw_config, config_path)
 
 
 def validate_candidate_properties(
@@ -491,6 +521,95 @@ def _build_neurovascular_environment_config(
     return neurovascular_environment
 
 
+def _build_hs_variant_panel_config(
+    raw_config: dict[str, Any],
+    config_path: Path,
+) -> HSVariantPanelConfig:
+    _require_fields(
+        raw_config,
+        "root",
+        (
+            "schema_name",
+            "schema_version",
+            "panel_id",
+            "panel_name",
+            "panel_scope",
+            "source_status",
+            "variants",
+        ),
+        config_path,
+    )
+
+    variants = _coerce_list(raw_config["variants"], "variants")
+    if not variants:
+        raise ConfigValidationError(
+            f"Field 'variants' in '{config_path}' must contain at least one variant."
+        )
+
+    panel = HSVariantPanelConfig(
+        schema_name=_coerce_string(raw_config["schema_name"], "schema_name"),
+        schema_version=_coerce_int(raw_config["schema_version"], "schema_version"),
+        panel_id=_coerce_string(raw_config["panel_id"], "panel_id"),
+        panel_name=_coerce_string(raw_config["panel_name"], "panel_name"),
+        panel_scope=_coerce_string(raw_config["panel_scope"], "panel_scope"),
+        source_status=_coerce_string(raw_config["source_status"], "source_status"),
+        variants=tuple(
+            _build_hs_variant_config(raw_variant, index, config_path)
+            for index, raw_variant in enumerate(variants, start=1)
+        ),
+    )
+    _validate_hs_variant_panel_config(panel, config_path)
+    return panel
+
+
+def _build_hs_variant_config(
+    raw_variant: Any,
+    index: int,
+    config_path: Path,
+) -> HSVariantConfig:
+    field_name = f"variants[{index}]"
+    variant = _coerce_mapping(raw_variant, field_name)
+    _require_fields(
+        variant,
+        field_name,
+        (
+            "variant_id",
+            "display_name",
+            "gag_class",
+            "panel_role",
+            "chain_length",
+            "sulfation_pattern",
+            "structural_annotations",
+            "simulation_annotations",
+            "provenance",
+        ),
+        config_path,
+    )
+
+    built_variant = HSVariantConfig(
+        variant_id=_coerce_string(variant["variant_id"], f"{field_name}.variant_id"),
+        display_name=_coerce_string(variant["display_name"], f"{field_name}.display_name"),
+        gag_class=_coerce_string(variant["gag_class"], f"{field_name}.gag_class"),
+        panel_role=_coerce_string(variant["panel_role"], f"{field_name}.panel_role"),
+        chain_length=_coerce_mapping(variant["chain_length"], f"{field_name}.chain_length"),
+        sulfation_pattern=_coerce_mapping(
+            variant["sulfation_pattern"],
+            f"{field_name}.sulfation_pattern",
+        ),
+        structural_annotations=_coerce_mapping(
+            variant["structural_annotations"],
+            f"{field_name}.structural_annotations",
+        ),
+        simulation_annotations=_coerce_mapping(
+            variant["simulation_annotations"],
+            f"{field_name}.simulation_annotations",
+        ),
+        provenance=_coerce_mapping(variant["provenance"], f"{field_name}.provenance"),
+    )
+    _validate_hs_variant_config(built_variant, field_name, config_path)
+    return built_variant
+
+
 def _coerce_float(value: Any, field_name: str) -> float:
     if isinstance(value, bool):
         raise ConfigValidationError(
@@ -505,6 +624,18 @@ def _coerce_float(value: Any, field_name: str) -> float:
         ) from exc
 
 
+def _coerce_int(value: Any, field_name: str) -> int:
+    if isinstance(value, bool):
+        raise ConfigValidationError(
+            f"Field '{field_name}' must be an integer, but received a boolean."
+        )
+    if not isinstance(value, int):
+        raise ConfigValidationError(
+            f"Field '{field_name}' must be an integer, but received {value!r}."
+        )
+    return value
+
+
 def _coerce_bool(value: Any, field_name: str) -> bool:
     if isinstance(value, bool):
         return value
@@ -512,6 +643,22 @@ def _coerce_bool(value: Any, field_name: str) -> bool:
     raise ConfigValidationError(
         f"Field '{field_name}' must be a boolean, but received {value!r}."
     )
+
+
+def _coerce_list(value: Any, field_name: str) -> list[Any]:
+    if not isinstance(value, list):
+        raise ConfigValidationError(
+            f"Field '{field_name}' must be a list, but received {value!r}."
+        )
+    return value
+
+
+def _coerce_mapping(value: Any, field_name: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ConfigValidationError(
+            f"Field '{field_name}' must be a mapping, but received {value!r}."
+        )
+    return value
 
 
 def _coerce_string(value: Any, field_name: str) -> str:
@@ -610,6 +757,257 @@ def _validate_neurovascular_environment_config(
         )
 
 
+def _validate_hs_variant_panel_config(
+    panel: HSVariantPanelConfig,
+    config_path: Path,
+) -> None:
+    if panel.schema_name != "hs_variant_panel":
+        raise ConfigValidationError(
+            f"Field 'schema_name' in '{config_path}' must be 'hs_variant_panel'."
+        )
+    if panel.schema_version <= 0:
+        raise ConfigValidationError(
+            f"Field 'schema_version' in '{config_path}' must be positive."
+        )
+
+
+def _validate_hs_variant_config(
+    variant: HSVariantConfig,
+    field_name: str,
+    config_path: Path,
+) -> None:
+    chain_length = variant.chain_length
+    sulfation_pattern = variant.sulfation_pattern
+    structural_annotations = variant.structural_annotations
+    simulation_annotations = variant.simulation_annotations
+    provenance = variant.provenance
+
+    _require_fields(
+        chain_length,
+        f"{field_name}.chain_length",
+        (
+            "degree_of_polymerization",
+            "residue_count",
+            "disaccharide_equivalents",
+            "length_bucket",
+        ),
+        config_path,
+    )
+    _require_fields(
+        sulfation_pattern,
+        f"{field_name}.sulfation_pattern",
+        (
+            "label",
+            "n_sulfation_count",
+            "o2_sulfation_count",
+            "o3_sulfation_count",
+            "o6_sulfation_count",
+            "total_sulfates",
+            "contains_3_o_sulfation",
+        ),
+        config_path,
+    )
+    _require_fields(
+        structural_annotations,
+        f"{field_name}.structural_annotations",
+        (
+            "definition_status",
+            "residue_sequence_template",
+            "uronic_acid_composition",
+            "glucosamine_composition",
+            "representative_formal_charge_at_ph_7_4",
+            "glytoucan_accession",
+            "canonical_wurcs",
+            "atomistic_preparation_status",
+            "atomistic_preparation_notes",
+        ),
+        config_path,
+    )
+    _require_fields(
+        simulation_annotations,
+        f"{field_name}.simulation_annotations",
+        (
+            "docking_role",
+            "md_priority",
+            "selectivity_comparison_group",
+            "expected_relative_affinity",
+            "benchmark_tags",
+            "rationale",
+        ),
+        config_path,
+    )
+    _require_fields(
+        provenance,
+        f"{field_name}.provenance",
+        ("source", "source_status"),
+        config_path,
+    )
+
+    degree_of_polymerization = _coerce_int(
+        chain_length["degree_of_polymerization"],
+        f"{field_name}.chain_length.degree_of_polymerization",
+    )
+    residue_count = _coerce_int(
+        chain_length["residue_count"],
+        f"{field_name}.chain_length.residue_count",
+    )
+    if degree_of_polymerization <= 0 or residue_count <= 0:
+        raise ConfigValidationError(
+            f"Fields '{field_name}.chain_length.degree_of_polymerization' and "
+            f"'{field_name}.chain_length.residue_count' in '{config_path}' must be positive."
+        )
+
+    disaccharide_equivalents = _coerce_float(
+        chain_length["disaccharide_equivalents"],
+        f"{field_name}.chain_length.disaccharide_equivalents",
+    )
+    if disaccharide_equivalents <= 0.0:
+        raise ConfigValidationError(
+            f"Field '{field_name}.chain_length.disaccharide_equivalents' in "
+            f"'{config_path}' must be positive."
+        )
+    _coerce_string(chain_length["length_bucket"], f"{field_name}.chain_length.length_bucket")
+
+    n_sulfation_count = _coerce_int(
+        sulfation_pattern["n_sulfation_count"],
+        f"{field_name}.sulfation_pattern.n_sulfation_count",
+    )
+    o2_sulfation_count = _coerce_int(
+        sulfation_pattern["o2_sulfation_count"],
+        f"{field_name}.sulfation_pattern.o2_sulfation_count",
+    )
+    o3_sulfation_count = _coerce_int(
+        sulfation_pattern["o3_sulfation_count"],
+        f"{field_name}.sulfation_pattern.o3_sulfation_count",
+    )
+    o6_sulfation_count = _coerce_int(
+        sulfation_pattern["o6_sulfation_count"],
+        f"{field_name}.sulfation_pattern.o6_sulfation_count",
+    )
+    total_sulfates = _coerce_int(
+        sulfation_pattern["total_sulfates"],
+        f"{field_name}.sulfation_pattern.total_sulfates",
+    )
+    contains_3_o_sulfation = _coerce_bool(
+        sulfation_pattern["contains_3_o_sulfation"],
+        f"{field_name}.sulfation_pattern.contains_3_o_sulfation",
+    )
+    _coerce_string(sulfation_pattern["label"], f"{field_name}.sulfation_pattern.label")
+    if min(
+        n_sulfation_count,
+        o2_sulfation_count,
+        o3_sulfation_count,
+        o6_sulfation_count,
+        total_sulfates,
+    ) < 0:
+        raise ConfigValidationError(
+            f"Sulfation counts in '{field_name}.sulfation_pattern' in '{config_path}' "
+            "must be greater than or equal to 0."
+        )
+    if total_sulfates != (
+        n_sulfation_count + o2_sulfation_count + o3_sulfation_count + o6_sulfation_count
+    ):
+        raise ConfigValidationError(
+            f"Field '{field_name}.sulfation_pattern.total_sulfates' in '{config_path}' "
+            "must equal the sum of the individual sulfation counts."
+        )
+    if contains_3_o_sulfation != (o3_sulfation_count > 0):
+        raise ConfigValidationError(
+            f"Field '{field_name}.sulfation_pattern.contains_3_o_sulfation' in "
+            f"'{config_path}' must match whether o3_sulfation_count is greater than 0."
+        )
+
+    residue_sequence_template = _coerce_list(
+        structural_annotations["residue_sequence_template"],
+        f"{field_name}.structural_annotations.residue_sequence_template",
+    )
+    if not residue_sequence_template:
+        raise ConfigValidationError(
+            f"Field '{field_name}.structural_annotations.residue_sequence_template' in "
+            f"'{config_path}' must contain at least one entry."
+        )
+    for residue_index, residue in enumerate(residue_sequence_template, start=1):
+        _coerce_string(
+            residue,
+            f"{field_name}.structural_annotations.residue_sequence_template[{residue_index}]",
+        )
+    _coerce_mapping(
+        structural_annotations["uronic_acid_composition"],
+        f"{field_name}.structural_annotations.uronic_acid_composition",
+    )
+    _coerce_mapping(
+        structural_annotations["glucosamine_composition"],
+        f"{field_name}.structural_annotations.glucosamine_composition",
+    )
+    _coerce_string(
+        structural_annotations["definition_status"],
+        f"{field_name}.structural_annotations.definition_status",
+    )
+    _coerce_float(
+        structural_annotations["representative_formal_charge_at_ph_7_4"],
+        f"{field_name}.structural_annotations.representative_formal_charge_at_ph_7_4",
+    )
+    if structural_annotations["glytoucan_accession"] is not None:
+        _coerce_string(
+            structural_annotations["glytoucan_accession"],
+            f"{field_name}.structural_annotations.glytoucan_accession",
+        )
+    if structural_annotations["canonical_wurcs"] is not None:
+        _coerce_string(
+            structural_annotations["canonical_wurcs"],
+            f"{field_name}.structural_annotations.canonical_wurcs",
+        )
+    _coerce_string(
+        structural_annotations["atomistic_preparation_status"],
+        f"{field_name}.structural_annotations.atomistic_preparation_status",
+    )
+    _coerce_string(
+        structural_annotations["atomistic_preparation_notes"],
+        f"{field_name}.structural_annotations.atomistic_preparation_notes",
+    )
+
+    benchmark_tags = _coerce_list(
+        simulation_annotations["benchmark_tags"],
+        f"{field_name}.simulation_annotations.benchmark_tags",
+    )
+    if not benchmark_tags:
+        raise ConfigValidationError(
+            f"Field '{field_name}.simulation_annotations.benchmark_tags' in "
+            f"'{config_path}' must contain at least one tag."
+        )
+    for tag_index, tag in enumerate(benchmark_tags, start=1):
+        _coerce_string(
+            tag,
+            f"{field_name}.simulation_annotations.benchmark_tags[{tag_index}]",
+        )
+    _coerce_string(
+        simulation_annotations["docking_role"],
+        f"{field_name}.simulation_annotations.docking_role",
+    )
+    _coerce_string(
+        simulation_annotations["md_priority"],
+        f"{field_name}.simulation_annotations.md_priority",
+    )
+    _coerce_string(
+        simulation_annotations["selectivity_comparison_group"],
+        f"{field_name}.simulation_annotations.selectivity_comparison_group",
+    )
+    _coerce_string(
+        simulation_annotations["expected_relative_affinity"],
+        f"{field_name}.simulation_annotations.expected_relative_affinity",
+    )
+    _coerce_string(
+        simulation_annotations["rationale"],
+        f"{field_name}.simulation_annotations.rationale",
+    )
+
+    _coerce_string(provenance["source"], f"{field_name}.provenance.source")
+    _coerce_string(
+        provenance["source_status"],
+        f"{field_name}.provenance.source_status",
+    )
+
+
 def _load_yaml_mapping(path: Path) -> dict[str, Any]:
     try:
         import yaml  # type: ignore[import-not-found]
@@ -630,9 +1028,29 @@ def _load_simple_yaml_mapping(path: Path) -> dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Configuration file not found: '{path}'.")
 
-    root: dict[str, Any] = {}
-    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
+    parsed = _load_simple_yaml_value(path)
+    if not isinstance(parsed, dict):
+        raise ConfigValidationError(f"Configuration file '{path}' must contain a mapping.")
+    if not parsed:
+        raise ConfigValidationError(f"Configuration file '{path}' is empty.")
+    return parsed
 
+
+def _load_simple_yaml_value(path: Path) -> Any:
+    lines = _tokenize_yaml_lines(path)
+    if not lines:
+        raise ConfigValidationError(f"Configuration file '{path}' is empty.")
+    parsed, next_index = _parse_simple_yaml_block(lines, 0, lines[0][1], path)
+    if next_index != len(lines):
+        line_number, _, _ = lines[next_index]
+        raise ConfigValidationError(
+            f"Unexpected trailing content in '{path}' on line {line_number}."
+        )
+    return parsed
+
+
+def _tokenize_yaml_lines(path: Path) -> list[tuple[int, int, str]]:
+    tokenized_lines: list[tuple[int, int, str]] = []
     for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
         line = _strip_yaml_comment(raw_line).rstrip()
         if not line.strip():
@@ -644,7 +1062,51 @@ def _load_simple_yaml_mapping(path: Path) -> dict[str, Any]:
                 f"Invalid indentation in '{path}' on line {line_number}: use multiples of two spaces."
             )
 
-        content = line.lstrip(" ")
+        tokenized_lines.append((line_number, indent, line.lstrip(" ")))
+    return tokenized_lines
+
+
+def _parse_simple_yaml_block(
+    lines: list[tuple[int, int, str]],
+    index: int,
+    indent: int,
+    path: Path,
+) -> tuple[Any, int]:
+    if index >= len(lines):
+        raise ConfigValidationError(f"Configuration file '{path}' is empty.")
+
+    _, line_indent, content = lines[index]
+    if line_indent != indent:
+        line_number, _, _ = lines[index]
+        raise ConfigValidationError(
+            f"Unexpected indentation in '{path}' on line {line_number}."
+        )
+
+    if content.startswith("- "):
+        return _parse_simple_yaml_sequence(lines, index, indent, path)
+    return _parse_simple_yaml_mapping(lines, index, indent, path)
+
+
+def _parse_simple_yaml_mapping(
+    lines: list[tuple[int, int, str]],
+    index: int,
+    indent: int,
+    path: Path,
+) -> tuple[dict[str, Any], int]:
+    mapping: dict[str, Any] = {}
+
+    while index < len(lines):
+        line_number, line_indent, content = lines[index]
+        if line_indent < indent:
+            break
+        if line_indent > indent:
+            raise ConfigValidationError(
+                f"Unexpected indentation in '{path}' on line {line_number}."
+            )
+        if content.startswith("- "):
+            raise ConfigValidationError(
+                f"Unexpected list item in mapping context in '{path}' on line {line_number}."
+            )
         if ":" not in content:
             raise ConfigValidationError(
                 f"Invalid YAML entry in '{path}' on line {line_number}: expected 'key: value'."
@@ -658,21 +1120,84 @@ def _load_simple_yaml_mapping(path: Path) -> dict[str, Any]:
                 f"Invalid YAML entry in '{path}' on line {line_number}: missing key name."
             )
 
-        while len(stack) > 1 and indent <= stack[-1][0]:
-            stack.pop()
-
-        parent = stack[-1][1]
+        index += 1
         if raw_value == "":
-            child: dict[str, Any] = {}
-            parent[key] = child
-            stack.append((indent, child))
+            if index < len(lines) and lines[index][1] > line_indent:
+                child, index = _parse_simple_yaml_block(lines, index, lines[index][1], path)
+            else:
+                child = {}
+            mapping[key] = child
             continue
 
-        parent[key] = _parse_scalar(raw_value)
+        mapping[key] = _parse_scalar(raw_value)
 
-    if not root:
-        raise ConfigValidationError(f"Configuration file '{path}' is empty.")
-    return root
+    return mapping, index
+
+
+def _parse_simple_yaml_sequence(
+    lines: list[tuple[int, int, str]],
+    index: int,
+    indent: int,
+    path: Path,
+) -> tuple[list[Any], int]:
+    sequence: list[Any] = []
+
+    while index < len(lines):
+        line_number, line_indent, content = lines[index]
+        if line_indent < indent:
+            break
+        if line_indent > indent:
+            raise ConfigValidationError(
+                f"Unexpected indentation in '{path}' on line {line_number}."
+            )
+        if not content.startswith("- "):
+            break
+
+        item_content = content[2:].strip()
+        index += 1
+
+        if item_content == "":
+            if index < len(lines) and lines[index][1] > line_indent:
+                item, index = _parse_simple_yaml_block(lines, index, lines[index][1], path)
+            else:
+                item = None
+            sequence.append(item)
+            continue
+
+        if ":" in item_content:
+            key, raw_value = item_content.split(":", maxsplit=1)
+            key = key.strip()
+            raw_value = raw_value.strip()
+            if not key:
+                raise ConfigValidationError(
+                    f"Invalid YAML list item in '{path}' on line {line_number}: missing key name."
+                )
+
+            item: dict[str, Any] = {}
+            if raw_value == "":
+                if index < len(lines) and lines[index][1] > line_indent:
+                    child, index = _parse_simple_yaml_block(lines, index, lines[index][1], path)
+                else:
+                    child = {}
+                item[key] = child
+            else:
+                item[key] = _parse_scalar(raw_value)
+
+            if index < len(lines) and lines[index][1] > line_indent:
+                extra_fields, index = _parse_simple_yaml_mapping(
+                    lines,
+                    index,
+                    lines[index][1],
+                    path,
+                )
+                item.update(extra_fields)
+
+            sequence.append(item)
+            continue
+
+        sequence.append(_parse_scalar(item_content))
+
+    return sequence, index
 
 
 def _strip_yaml_comment(raw_line: str) -> str:
