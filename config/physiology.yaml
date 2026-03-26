@@ -31,3 +31,12 @@ neurovascular_environment:
   hspg_site_density_per_um3: 500.0
   interstitial_pressure_mmHg: 2.0
   oxygen_fraction: 0.21
+
+simulation_controls:
+  concentration_grid_uM:
+    - 0.01
+    - 0.1
+    - 1.0
+    - 10.0
+  occupancy_threshold_fraction: 0.5
+  time_step_s: 5.0
