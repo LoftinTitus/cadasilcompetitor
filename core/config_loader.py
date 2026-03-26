@@ -44,6 +44,7 @@ simulation_controls:
   concentration_grid_uM: [0.01, 0.1, 1.0, 10.0]
   occupancy_threshold_fraction: 0.5
   time_step_s: 5.0
+  spatial_grid_points: 25
 
 Shared YAML fields and units:
 - physiology.pH: dimensionless
@@ -69,6 +70,7 @@ Shared YAML fields and units:
 - simulation_controls.concentration_grid_uM: micromolar concentrations to sweep
 - simulation_controls.occupancy_threshold_fraction: occupancy threshold used for summaries
 - simulation_controls.time_step_s: seconds per simulation step
+- simulation_controls.spatial_grid_points: depth discretization for Tier B PDE runs
 
 Candidate-specific computed properties and units:
 - diffusion_coefficient_um2_s: square micrometers per second
@@ -96,6 +98,7 @@ SUPPORTED_EXPOSURE_SIDES: tuple[str, ...] = ("luminal", "abluminal")
 DEFAULT_CONCENTRATION_GRID_UM: tuple[float, ...] = (0.01, 0.1, 1.0, 10.0)
 DEFAULT_OCCUPANCY_THRESHOLD_FRACTION: float = 0.5
 DEFAULT_TIME_STEP_S: float = 5.0
+DEFAULT_SPATIAL_GRID_POINTS: int = 25
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +154,7 @@ class SimulationControlsConfig:
     concentration_grid_uM: tuple[float, ...]
     occupancy_threshold_fraction: float
     time_step_s: float
+    spatial_grid_points: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +171,7 @@ class SimulationConfig:
             concentration_grid_uM=DEFAULT_CONCENTRATION_GRID_UM,
             occupancy_threshold_fraction=DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
             time_step_s=DEFAULT_TIME_STEP_S,
+            spatial_grid_points=DEFAULT_SPATIAL_GRID_POINTS,
         )
     )
 
@@ -559,6 +564,7 @@ def _build_simulation_controls_config(
             concentration_grid_uM=DEFAULT_CONCENTRATION_GRID_UM,
             occupancy_threshold_fraction=DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
             time_step_s=DEFAULT_TIME_STEP_S,
+            spatial_grid_points=DEFAULT_SPATIAL_GRID_POINTS,
         )
 
     section = _coerce_mapping(raw_section, "simulation_controls")
@@ -571,6 +577,10 @@ def _build_simulation_controls_config(
         DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
     )
     time_step_s = section.get("time_step_s", DEFAULT_TIME_STEP_S)
+    spatial_grid_points = section.get(
+        "spatial_grid_points",
+        DEFAULT_SPATIAL_GRID_POINTS,
+    )
 
     controls = SimulationControlsConfig(
         concentration_grid_uM=tuple(
@@ -587,6 +597,10 @@ def _build_simulation_controls_config(
         time_step_s=_coerce_float(
             time_step_s,
             "simulation_controls.time_step_s",
+        ),
+        spatial_grid_points=_coerce_int(
+            spatial_grid_points,
+            "simulation_controls.spatial_grid_points",
         ),
     )
     _validate_simulation_controls_config(controls, config_path)
@@ -848,6 +862,10 @@ def _validate_simulation_controls_config(
     if controls.time_step_s <= 0.0:
         raise ConfigValidationError(
             f"Field 'simulation_controls.time_step_s' in '{config_path}' must be positive."
+        )
+    if controls.spatial_grid_points < 3:
+        raise ConfigValidationError(
+            f"Field 'simulation_controls.spatial_grid_points' in '{config_path}' must be at least 3."
         )
 
 

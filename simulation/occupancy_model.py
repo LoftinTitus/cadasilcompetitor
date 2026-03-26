@@ -23,6 +23,7 @@ from simulation.environment import (
 )
 
 MICROMOLAR_TO_MOLAR = 1e-6
+AVOGADRO = 6.02214076e23
 PATH_LENGTH_MULTIPLIER_BY_COMPARTMENT = {
     "glycocalyx": 1.0,
     "basement_membrane": 4.0,
@@ -125,6 +126,7 @@ def simulate_occupancy_sweep(model_inputs: dict[str, Any]) -> dict[str, Any]:
         "operating_point": operating_point,
         "summary": {
             "screening_focus": model_inputs.get("screening_focus"),
+            "model_tier": "A",
             "occupancy_threshold_fraction": threshold,
             "recommended_concentration_uM": (
                 operating_point["input_concentration_uM"] if operating_point is not None else None
@@ -138,6 +140,9 @@ def simulate_occupancy_sweep(model_inputs: dict[str, Any]) -> dict[str, Any]:
             ),
             "best_time_above_threshold_s": max(
                 result["summary"]["time_above_threshold_s"] for result in concentration_results
+            ),
+            "selection_peak_occupancy_fraction": max(
+                result["summary"]["max_occupancy_fraction"] for result in concentration_results
             ),
         },
     }
@@ -224,15 +229,18 @@ def _build_simulation_controls(
         concentration_grid_uM = tuple(float(value) for value in controls.concentration_grid_uM)
         occupancy_threshold_fraction = float(controls.occupancy_threshold_fraction)
         time_step_s = float(controls.time_step_s)
+        spatial_grid_points = int(controls.spatial_grid_points)
     else:
         concentration_grid_uM = DEFAULT_CONCENTRATION_GRID_UM
         occupancy_threshold_fraction = DEFAULT_OCCUPANCY_THRESHOLD_FRACTION
         time_step_s = DEFAULT_TIME_STEP_S
+        spatial_grid_points = 25
 
     return {
         "concentration_grid_uM": concentration_grid_uM,
         "occupancy_threshold_fraction": occupancy_threshold_fraction,
         "time_step_s": time_step_s,
+        "spatial_grid_points": spatial_grid_points,
     }
 
 
@@ -255,6 +263,9 @@ def _build_effective_model_parameters(
         degradation = simulation_config.degradation
         neurovascular_environment = simulation_config.neurovascular_environment
         maximum_occupancy_fraction = simulation_config.binding.maximum_occupancy_fraction
+        surface_binding_site_density_per_um2 = (
+            simulation_config.binding.binding_site_density_per_um2
+        )
     else:
         target = None
         barrier = None
@@ -262,6 +273,7 @@ def _build_effective_model_parameters(
         degradation = None
         neurovascular_environment = None
         maximum_occupancy_fraction = 1.0
+        surface_binding_site_density_per_um2 = 1000.0
 
     compartment = target.compartment if target is not None else "glycocalyx"
     exposure_side = target.exposure_side if target is not None else "luminal"
@@ -278,12 +290,22 @@ def _build_effective_model_parameters(
         if compartment == "glycocalyx" and exposure_side == "luminal"
         else permeability_um_s / (permeability_um_s + 0.1)
     )
-
-    delivery_rate_per_s = (
+    extracellular_matrix_density_fraction = (
+        neurovascular_environment.extracellular_matrix_density_fraction
+        if neurovascular_environment is not None
+        else 0.15
+    )
+    tortuosity_factor = 1.0 + (3.0 * extracellular_matrix_density_fraction)
+    effective_diffusion_coefficient_um2_s = (
         candidate_properties.diffusion_coefficient_um2_s
         * porosity_fraction
         * route_factor
         * max(permeability_factor, 1e-6)
+        / tortuosity_factor
+    )
+
+    delivery_rate_per_s = (
+        effective_diffusion_coefficient_um2_s
         / (effective_path_length_um**2)
     )
 
@@ -311,6 +333,15 @@ def _build_effective_model_parameters(
         pressure_loss_rate_per_s = (
             neurovascular_environment.interstitial_pressure_mmHg * 1e-4
         ) * (0.5 if compartment == "glycocalyx" else 1.0)
+        volumetric_site_density_per_um3 = max(
+            neurovascular_environment.hspg_site_density_per_um3,
+            surface_binding_site_density_per_um2 / max(base_path_length_um, 1e-6),
+        )
+    else:
+        volumetric_site_density_per_um3 = surface_binding_site_density_per_um2 / max(
+            base_path_length_um,
+            1e-6,
+        )
 
     total_loss_rate_per_s = (
         candidate_properties.clearance_rate_per_s
@@ -342,16 +373,23 @@ def _build_effective_model_parameters(
     residence_time_s = (
         math.inf if effective_dissociation_rate_per_s == 0.0 else 1.0 / effective_dissociation_rate_per_s
     )
+    binding_site_capacity_M = (
+        volumetric_site_density_per_um3 * 1e15 / AVOGADRO
+    ) * maximum_occupancy_fraction
+    binding_site_capacity_uM = binding_site_capacity_M / MICROMOLAR_TO_MOLAR
 
     return {
         "delivery_rate_per_s": delivery_rate_per_s,
         "route_accessibility_factor": route_factor,
         "effective_path_length_um": effective_path_length_um,
         "permeability_factor": permeability_factor,
+        "effective_diffusion_coefficient_um2_s": effective_diffusion_coefficient_um2_s,
+        "tortuosity_factor": tortuosity_factor,
         "degradation_rate_per_s": degradation_rate_per_s,
         "convective_washout_rate_per_s": convective_washout_rate_per_s,
         "pressure_loss_rate_per_s": pressure_loss_rate_per_s,
         "total_loss_rate_per_s": total_loss_rate_per_s,
+        "binding_site_capacity_uM": binding_site_capacity_uM,
         "variant_affinity_multiplier": variant_affinity_multiplier,
         "salt_sensitivity_factor": salt_sensitivity_factor,
         "effective_association_rate_M_inv_s": effective_association_rate_M_inv_s,

@@ -4,7 +4,11 @@ import unittest
 from dataclasses import replace
 
 from core.config_loader import CandidateProperties, TargetConfig, load_hs_variant_panel, load_simulation_config
-from simulation.binding_simulation import run_binding_simulation, run_binding_simulation_panel
+from simulation.binding_simulation import (
+    run_binding_simulation,
+    run_binding_simulation_panel,
+    run_binding_simulation_tier_b,
+)
 
 
 class BindingSimulationTests(unittest.TestCase):
@@ -32,6 +36,7 @@ class BindingSimulationTests(unittest.TestCase):
         self.assertEqual(tuple(controls.concentration_grid_uM), (0.01, 0.1, 1.0, 10.0))
         self.assertEqual(controls.occupancy_threshold_fraction, 0.5)
         self.assertEqual(controls.time_step_s, 5.0)
+        self.assertEqual(controls.spatial_grid_points, 25)
 
     def test_single_variant_run_returns_occupancy_sweep(self) -> None:
         variant = self._variant("HS-dp4-NS-6S")
@@ -113,6 +118,47 @@ class BindingSimulationTests(unittest.TestCase):
 
         self.assertEqual(len(result["results"]), len(self.hs_variant_panel.variants))
         self.assertEqual(result["summary"]["best_variant_id"], "HS-dp5-AT-motif")
+
+    def test_tier_b_run_returns_spatial_profile(self) -> None:
+        variant = self._variant("HS-dp4-NS-6S")
+        result = run_binding_simulation_tier_b(
+            self.candidate,
+            self.simulation_config,
+            self.candidate_properties,
+            hs_variant=variant,
+        )
+
+        self.assertEqual(result["summary"]["model_tier"], "B")
+        self.assertEqual(len(result["concentration_sweep"]), 4)
+        first_result = result["concentration_sweep"][0]
+        self.assertIn("spatial_final_state", first_result)
+        self.assertEqual(
+            len(first_result["spatial_final_state"]["depth_um"]),
+            self.simulation_config.simulation_controls.spatial_grid_points,
+        )
+
+    def test_tier_b_shows_spatial_gradient_and_surface_first_behavior(self) -> None:
+        result = run_binding_simulation(
+            self.candidate,
+            self.simulation_config,
+            self.candidate_properties,
+            model_tier="B",
+        )
+
+        selected = result["operating_point"]
+        self.assertIsNotNone(selected)
+        self.assertGreater(
+            selected["summary"]["max_gradient_uM_per_um"],
+            0.0,
+        )
+        self.assertGreater(
+            selected["summary"]["max_surface_occupancy_fraction"],
+            selected["summary"]["max_distal_occupancy_fraction"],
+        )
+        self.assertGreaterEqual(
+            selected["summary"]["max_penetration_depth_um_at_threshold"],
+            0.0,
+        )
 
     def _variant(self, variant_id: str):
         for variant in self.hs_variant_panel.variants:

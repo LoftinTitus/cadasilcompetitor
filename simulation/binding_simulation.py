@@ -1,9 +1,4 @@
-"""Binding simulation entry points for Tier A occupancy modeling.
-
-The implementation here follows the README's first transport milestone:
-a compartment-style model that maps candidate kinetics and environment
-configuration into time-dependent HS occupancy.
-"""
+"""Binding simulation entry points for Tier A and Tier B occupancy modeling."""
 
 from __future__ import annotations
 
@@ -20,6 +15,7 @@ from simulation.occupancy_model import (
     prepare_occupancy_model_inputs,
     simulate_occupancy_sweep,
 )
+from simulation.reaction_diffusion_model import simulate_reaction_diffusion_sweep
 
 
 def run_binding_simulation(
@@ -27,6 +23,7 @@ def run_binding_simulation(
     simulation_config: SimulationConfig | PhysiologyConfig,
     candidate_properties: CandidateProperties | None = None,
     hs_variant: HSVariantConfig | None = None,
+    model_tier: str = "A",
 ) -> dict[str, Any]:
     if candidate_properties is None:
         raise ValueError(
@@ -40,7 +37,13 @@ def run_binding_simulation(
         candidate_properties,
         hs_variant=hs_variant,
     )
-    occupancy_results = simulate_occupancy_sweep(model_inputs)
+    normalized_model_tier = model_tier.strip().upper()
+    if normalized_model_tier == "A":
+        occupancy_results = simulate_occupancy_sweep(model_inputs)
+    elif normalized_model_tier == "B":
+        occupancy_results = simulate_reaction_diffusion_sweep(model_inputs)
+    else:
+        raise ValueError("model_tier must be 'A' or 'B'.")
 
     return {
         **model_inputs,
@@ -53,6 +56,7 @@ def run_binding_simulation_panel(
     simulation_config: SimulationConfig | PhysiologyConfig,
     candidate_properties: CandidateProperties,
     hs_variant_panel: HSVariantPanelConfig | list[HSVariantConfig] | tuple[HSVariantConfig, ...],
+    model_tier: str = "A",
 ) -> dict[str, Any]:
     variants = (
         hs_variant_panel.variants
@@ -66,6 +70,7 @@ def run_binding_simulation_panel(
             simulation_config,
             candidate_properties,
             hs_variant=variant,
+            model_tier=model_tier,
         )
         for variant in variants
     ]
@@ -85,6 +90,21 @@ def run_binding_simulation_panel(
     }
 
 
+def run_binding_simulation_tier_b(
+    candidate: Any,
+    simulation_config: SimulationConfig | PhysiologyConfig,
+    candidate_properties: CandidateProperties,
+    hs_variant: HSVariantConfig | None = None,
+) -> dict[str, Any]:
+    return run_binding_simulation(
+        candidate,
+        simulation_config,
+        candidate_properties,
+        hs_variant=hs_variant,
+        model_tier="B",
+    )
+
+
 def _summarize_panel_results(per_variant_results: list[dict[str, Any]]) -> dict[str, Any]:
     if not per_variant_results:
         return {
@@ -97,7 +117,10 @@ def _summarize_panel_results(per_variant_results: list[dict[str, Any]]) -> dict[
     ranked_results = sorted(
         per_variant_results,
         key=lambda result: (
-            result["summary"]["best_case_max_occupancy_fraction"],
+            result["summary"].get(
+                "selection_peak_occupancy_fraction",
+                result["summary"].get("best_case_max_occupancy_fraction", 0.0),
+            ),
             -result["model_parameters"]["estimated_kd_uM"],
         ),
         reverse=True,
@@ -109,7 +132,7 @@ def _summarize_panel_results(per_variant_results: list[dict[str, Any]]) -> dict[
         "best_variant_id": _variant_id(best_result),
         "worst_variant_id": _variant_id(worst_result),
         "highest_max_occupancy_fraction": best_result["summary"][
-            "best_case_max_occupancy_fraction"
+            "selection_peak_occupancy_fraction"
         ],
         "lowest_estimated_kd_uM": min(
             result["model_parameters"]["estimated_kd_uM"] for result in per_variant_results
