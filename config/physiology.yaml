@@ -40,3 +40,4 @@ simulation_controls:
     - 10.0
   occupancy_threshold_fraction: 0.5
   time_step_s: 5.0
+  spatial_grid_points: 25
