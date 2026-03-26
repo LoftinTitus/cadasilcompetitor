@@ -40,6 +40,11 @@ neurovascular_environment:
   interstitial_pressure_mmHg: 2.0
   oxygen_fraction: 0.21
 
+simulation_controls:
+  concentration_grid_uM: [0.01, 0.1, 1.0, 10.0]
+  occupancy_threshold_fraction: 0.5
+  time_step_s: 5.0
+
 Shared YAML fields and units:
 - physiology.pH: dimensionless
 - physiology.salt_concentration_mM: millimolar
@@ -61,6 +66,9 @@ Shared YAML fields and units:
 - neurovascular_environment.hspg_site_density_per_um3: sites per cubic micrometer
 - neurovascular_environment.interstitial_pressure_mmHg: millimeters of mercury
 - neurovascular_environment.oxygen_fraction: unitless fraction
+- simulation_controls.concentration_grid_uM: micromolar concentrations to sweep
+- simulation_controls.occupancy_threshold_fraction: occupancy threshold used for summaries
+- simulation_controls.time_step_s: seconds per simulation step
 
 Candidate-specific computed properties and units:
 - diffusion_coefficient_um2_s: square micrometers per second
@@ -75,7 +83,7 @@ Candidate-specific computed properties and units:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -85,6 +93,9 @@ SUPPORTED_TARGET_COMPARTMENTS: tuple[str, ...] = (
     "perivascular_ecm",
 )
 SUPPORTED_EXPOSURE_SIDES: tuple[str, ...] = ("luminal", "abluminal")
+DEFAULT_CONCENTRATION_GRID_UM: tuple[float, ...] = (0.01, 0.1, 1.0, 10.0)
+DEFAULT_OCCUPANCY_THRESHOLD_FRACTION: float = 0.5
+DEFAULT_TIME_STEP_S: float = 5.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +147,13 @@ class NeurovascularEnvironmentConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class SimulationControlsConfig:
+    concentration_grid_uM: tuple[float, ...]
+    occupancy_threshold_fraction: float
+    time_step_s: float
+
+
+@dataclass(frozen=True, slots=True)
 class SimulationConfig:
     physiology: PhysiologyConfig
     target: TargetConfig
@@ -144,6 +162,13 @@ class SimulationConfig:
     barrier: BarrierConfig
     degradation: DegradationConfig
     neurovascular_environment: NeurovascularEnvironmentConfig
+    simulation_controls: SimulationControlsConfig = field(
+        default_factory=lambda: SimulationControlsConfig(
+            concentration_grid_uM=DEFAULT_CONCENTRATION_GRID_UM,
+            occupancy_threshold_fraction=DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
+            time_step_s=DEFAULT_TIME_STEP_S,
+        )
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,6 +242,10 @@ def load_simulation_config(path: str) -> SimulationConfig:
         ),
         neurovascular_environment=_build_neurovascular_environment_config(
             _require_mapping(raw_config, "neurovascular_environment", config_path),
+            config_path,
+        ),
+        simulation_controls=_build_simulation_controls_config(
+            raw_config.get("simulation_controls"),
             config_path,
         ),
     )
@@ -521,6 +550,49 @@ def _build_neurovascular_environment_config(
     return neurovascular_environment
 
 
+def _build_simulation_controls_config(
+    raw_section: Any,
+    config_path: Path,
+) -> SimulationControlsConfig:
+    if raw_section is None:
+        return SimulationControlsConfig(
+            concentration_grid_uM=DEFAULT_CONCENTRATION_GRID_UM,
+            occupancy_threshold_fraction=DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
+            time_step_s=DEFAULT_TIME_STEP_S,
+        )
+
+    section = _coerce_mapping(raw_section, "simulation_controls")
+    concentration_values = section.get(
+        "concentration_grid_uM",
+        list(DEFAULT_CONCENTRATION_GRID_UM),
+    )
+    occupancy_threshold_fraction = section.get(
+        "occupancy_threshold_fraction",
+        DEFAULT_OCCUPANCY_THRESHOLD_FRACTION,
+    )
+    time_step_s = section.get("time_step_s", DEFAULT_TIME_STEP_S)
+
+    controls = SimulationControlsConfig(
+        concentration_grid_uM=tuple(
+            _coerce_float(value, "simulation_controls.concentration_grid_uM")
+            for value in _coerce_list(
+                concentration_values,
+                "simulation_controls.concentration_grid_uM",
+            )
+        ),
+        occupancy_threshold_fraction=_coerce_float(
+            occupancy_threshold_fraction,
+            "simulation_controls.occupancy_threshold_fraction",
+        ),
+        time_step_s=_coerce_float(
+            time_step_s,
+            "simulation_controls.time_step_s",
+        ),
+    )
+    _validate_simulation_controls_config(controls, config_path)
+    return controls
+
+
 def _build_hs_variant_panel_config(
     raw_config: dict[str, Any],
     config_path: Path,
@@ -754,6 +826,28 @@ def _validate_neurovascular_environment_config(
     if not 0.0 <= neurovascular_environment.oxygen_fraction <= 1.0:
         raise ConfigValidationError(
             "Field 'neurovascular_environment.oxygen_fraction' must be between 0 and 1."
+        )
+
+
+def _validate_simulation_controls_config(
+    controls: SimulationControlsConfig,
+    config_path: Path,
+) -> None:
+    if not controls.concentration_grid_uM:
+        raise ConfigValidationError(
+            f"Field 'simulation_controls.concentration_grid_uM' in '{config_path}' must contain at least one concentration."
+        )
+    if any(value <= 0.0 for value in controls.concentration_grid_uM):
+        raise ConfigValidationError(
+            f"Field 'simulation_controls.concentration_grid_uM' in '{config_path}' must contain only positive concentrations."
+        )
+    if not 0.0 <= controls.occupancy_threshold_fraction <= 1.0:
+        raise ConfigValidationError(
+            f"Field 'simulation_controls.occupancy_threshold_fraction' in '{config_path}' must be between 0 and 1."
+        )
+    if controls.time_step_s <= 0.0:
+        raise ConfigValidationError(
+            f"Field 'simulation_controls.time_step_s' in '{config_path}' must be positive."
         )
 
 
