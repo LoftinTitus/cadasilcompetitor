@@ -9,6 +9,10 @@ from simulation.binding_simulation import (
     run_binding_simulation_panel,
     run_binding_simulation_tier_b,
 )
+from simulation.candidate_property_estimation import (
+    estimate_candidate_properties,
+    estimate_candidate_properties_with_diagnostics,
+)
 
 
 class BindingSimulationTests(unittest.TestCase):
@@ -54,6 +58,46 @@ class BindingSimulationTests(unittest.TestCase):
             0.0,
         )
         self.assertIn("effective_association_rate_M_inv_s", result["model_parameters"])
+
+    def test_candidate_property_estimator_returns_valid_properties(self) -> None:
+        properties = estimate_candidate_properties(self.candidate)
+
+        self.assertGreater(properties.diffusion_coefficient_um2_s, 0.0)
+        self.assertGreater(properties.association_rate_M_inv_s, 0.0)
+        self.assertGreater(properties.half_life_s, 0.0)
+        self.assertGreaterEqual(properties.clearance_rate_per_s, 0.0)
+
+    def test_candidate_property_estimator_uses_warning_flags(self) -> None:
+        calm_candidate = {
+            "candidate_id": "pep_calm",
+            "sequence": "AKRKRQGK",
+            "warning_flags": [],
+        }
+        risky_candidate = {
+            "candidate_id": "pep_risky",
+            "sequence": "RRRRKKKKWW",
+            "warning_flags": ["cpp_like_uptake_risk", "aggregation_risk"],
+        }
+
+        calm_properties = estimate_candidate_properties(calm_candidate)
+        risky_properties = estimate_candidate_properties(risky_candidate)
+
+        self.assertGreater(
+            risky_properties.clearance_rate_per_s,
+            calm_properties.clearance_rate_per_s,
+        )
+        self.assertGreater(
+            risky_properties.barrier_permeability_cm_s,
+            calm_properties.barrier_permeability_cm_s,
+        )
+
+    def test_estimator_diagnostics_include_metadata_and_flat_dict(self) -> None:
+        diagnostics = estimate_candidate_properties_with_diagnostics(self.candidate)
+
+        self.assertIn("candidate_properties", diagnostics)
+        self.assertIn("candidate_properties_dict", diagnostics)
+        self.assertIn("sequence_metadata", diagnostics)
+        self.assertEqual(diagnostics["sequence_metadata"]["sequence"], "AKRKRQGK")
 
     def test_glycocalyx_is_more_accessible_than_basement_membrane_for_same_candidate(self) -> None:
         glycocalyx_result = run_binding_simulation(
@@ -119,6 +163,33 @@ class BindingSimulationTests(unittest.TestCase):
         self.assertEqual(len(result["results"]), len(self.hs_variant_panel.variants))
         self.assertEqual(result["summary"]["best_variant_id"], "HS-dp5-AT-motif")
 
+    def test_simulation_can_estimate_candidate_properties_automatically(self) -> None:
+        result = run_binding_simulation(
+            self.candidate,
+            self.simulation_config,
+            hs_variant=self._variant("HS-dp4-NS-6S"),
+        )
+
+        self.assertIsNotNone(result["candidate_properties"])
+        self.assertGreater(
+            result["candidate_properties"]["association_rate_M_inv_s"],
+            0.0,
+        )
+        self.assertGreater(
+            result["summary"]["best_case_max_occupancy_fraction"],
+            0.0,
+        )
+
+    def test_panel_run_can_estimate_candidate_properties_automatically(self) -> None:
+        result = run_binding_simulation_panel(
+            self.candidate,
+            self.simulation_config,
+            hs_variant_panel=self.hs_variant_panel,
+        )
+
+        self.assertEqual(len(result["results"]), len(self.hs_variant_panel.variants))
+        self.assertEqual(result["results"][0]["candidate"]["candidate_id"], "pep_test")
+
     def test_tier_b_run_returns_spatial_profile(self) -> None:
         variant = self._variant("HS-dp4-NS-6S")
         result = run_binding_simulation_tier_b(
@@ -159,6 +230,16 @@ class BindingSimulationTests(unittest.TestCase):
             selected["summary"]["max_penetration_depth_um_at_threshold"],
             0.0,
         )
+
+    def test_tier_b_can_estimate_candidate_properties_automatically(self) -> None:
+        result = run_binding_simulation_tier_b(
+            self.candidate,
+            self.simulation_config,
+            hs_variant=self._variant("HS-dp4-NS-6S"),
+        )
+
+        self.assertEqual(result["summary"]["model_tier"], "B")
+        self.assertIsNotNone(result["candidate_properties"])
 
     def _variant(self, variant_id: str):
         for variant in self.hs_variant_panel.variants:
