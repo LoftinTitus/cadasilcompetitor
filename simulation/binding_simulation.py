@@ -11,6 +11,7 @@ from core.config_loader import (
     PhysiologyConfig,
     SimulationConfig,
 )
+from simulation.candidate_property_estimation import estimate_candidate_properties
 from simulation.occupancy_model import (
     prepare_occupancy_model_inputs,
     simulate_occupancy_sweep,
@@ -25,16 +26,16 @@ def run_binding_simulation(
     hs_variant: HSVariantConfig | None = None,
     model_tier: str = "A",
 ) -> dict[str, Any]:
-    if candidate_properties is None:
-        raise ValueError(
-            "candidate_properties are required for occupancy simulation because the "
-            "README model depends on diffusion, clearance, kon, koff, and degradation inputs."
-        )
+    resolved_candidate_properties = (
+        candidate_properties
+        if candidate_properties is not None
+        else estimate_candidate_properties(candidate)
+    )
 
     model_inputs = prepare_occupancy_model_inputs(
         candidate,
         simulation_config,
-        candidate_properties,
+        resolved_candidate_properties,
         hs_variant=hs_variant,
     )
     normalized_model_tier = model_tier.strip().upper()
@@ -54,10 +55,13 @@ def run_binding_simulation(
 def run_binding_simulation_panel(
     candidate: Any,
     simulation_config: SimulationConfig | PhysiologyConfig,
-    candidate_properties: CandidateProperties,
-    hs_variant_panel: HSVariantPanelConfig | list[HSVariantConfig] | tuple[HSVariantConfig, ...],
+    candidate_properties: CandidateProperties | None = None,
+    hs_variant_panel: HSVariantPanelConfig | list[HSVariantConfig] | tuple[HSVariantConfig, ...] | None = None,
     model_tier: str = "A",
 ) -> dict[str, Any]:
+    if hs_variant_panel is None:
+        raise ValueError("hs_variant_panel is required for panel simulation.")
+
     variants = (
         hs_variant_panel.variants
         if isinstance(hs_variant_panel, HSVariantPanelConfig)
@@ -93,7 +97,7 @@ def run_binding_simulation_panel(
 def run_binding_simulation_tier_b(
     candidate: Any,
     simulation_config: SimulationConfig | PhysiologyConfig,
-    candidate_properties: CandidateProperties,
+    candidate_properties: CandidateProperties | None = None,
     hs_variant: HSVariantConfig | None = None,
 ) -> dict[str, Any]:
     return run_binding_simulation(
