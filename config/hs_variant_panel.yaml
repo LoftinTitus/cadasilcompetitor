@@ -42,9 +42,9 @@ variants:
         GlcNS3S6S: 0
       representative_formal_charge_at_ph_7_4: -2
       glytoucan_accession: null
-      canonical_wurcs: null
-      atomistic_preparation_status: sequence_defined_accession_pending
-      atomistic_preparation_notes: resolve exact linkage stereochemistry and terminal chemistry before production docking or MD
+      canonical_wurcs: WURCS=2.0/2,4,3/[a2122A-1a_1-5][a2122h-1b_1-5_2*NCC/3=O]/1-2-1-2/a4-b1_b3-c1_c4-d1
+      atomistic_preparation_status: canonical_wurcs_defined_accession_unavailable
+      atomistic_preparation_notes: canonical WURCS resolved from an explicit GlycoCT representative sequence via GlyCosmos; no GlyTouCan accession was returned, so validate reducing-end treatment before production docking or MD
     simulation_annotations:
       docking_role: negative_control
       md_priority: low
@@ -95,9 +95,9 @@ variants:
         GlcNS3S6S: 0
       representative_formal_charge_at_ph_7_4: -4
       glytoucan_accession: null
-      canonical_wurcs: null
-      atomistic_preparation_status: sequence_defined_accession_pending
-      atomistic_preparation_notes: resolve exact linkage stereochemistry and terminal chemistry before production docking or MD
+      canonical_wurcs: WURCS=2.0/2,4,3/[a2122A-1a_1-5][a2122h-1b_1-5_2*NSO/3=O/3=O]/1-2-1-2/a4-b1_b3-c1_c4-d1
+      atomistic_preparation_status: canonical_wurcs_defined_accession_unavailable
+      atomistic_preparation_notes: canonical WURCS resolved from an explicit GlycoCT representative sequence via GlyCosmos; no GlyTouCan accession was returned, so validate reducing-end treatment before production docking or MD
     simulation_annotations:
       docking_role: motif_probe
       md_priority: medium
@@ -147,10 +147,10 @@ variants:
         GlcNS3S: 0
         GlcNS3S6S: 0
       representative_formal_charge_at_ph_7_4: -6
-      glytoucan_accession: null
-      canonical_wurcs: null
-      atomistic_preparation_status: representative_sequence_accession_pending
-      atomistic_preparation_notes: confirm residue ordering and terminal stereochemistry before production docking or MD
+      glytoucan_accession: G13487SU
+      canonical_wurcs: WURCS=2.0/2,4,3/[a2121A-1a_1-5_2*OSO/3=O/3=O][a2122h-1a_1-5_2*NSO/3=O/3=O]/1-2-1-2/a4-b1_b4-c1_c4-d1
+      atomistic_preparation_status: registered_structure_resolved
+      atomistic_preparation_notes: exact representative sequence resolved through GlyCosmos and matched to GlyTouCan accession G13487SU for downstream docking or MD
     simulation_annotations:
       docking_role: motif_probe
       md_priority: medium
@@ -201,9 +201,9 @@ variants:
         GlcNS3S6S: 0
       representative_formal_charge_at_ph_7_4: -6
       glytoucan_accession: null
-      canonical_wurcs: null
-      atomistic_preparation_status: representative_sequence_accession_pending
-      atomistic_preparation_notes: confirm residue ordering and terminal stereochemistry before production docking or MD
+      canonical_wurcs: WURCS=2.0/2,4,3/[a2122A-1a_1-5][a2122h-1b_1-5_2*NSO/3=O/3=O_6*OSO/3=O/3=O]/1-2-1-2/a4-b1_b3-c1_c4-d1
+      atomistic_preparation_status: canonical_wurcs_defined_accession_unavailable
+      atomistic_preparation_notes: canonical WURCS resolved from an explicit GlycoCT representative sequence via GlyCosmos; no GlyTouCan accession was returned, so validate reducing-end treatment before production docking or MD
     simulation_annotations:
       docking_role: motif_probe
       md_priority: medium
@@ -256,9 +256,9 @@ variants:
         GlcNS3S6S: 0
       representative_formal_charge_at_ph_7_4: -8
       glytoucan_accession: null
-      canonical_wurcs: null
-      atomistic_preparation_status: representative_sequence_accession_pending
-      atomistic_preparation_notes: treat as a representative mixed HS motif and resolve an exact residue-level structure before production docking or MD
+      canonical_wurcs: WURCS=2.0/5,6,5/[a2122A-1a_1-5][a2122h-1b_1-5_2*NSO/3=O/3=O][a2121A-1a_1-5_2*OSO/3=O/3=O][a2122h-1b_1-5_2*NCC/3=O_6*OSO/3=O/3=O][a2122h-1b_1-5_2*NSO/3=O/3=O_6*OSO/3=O/3=O]/1-2-3-4-1-5/a4-b1_b3-c1_c4-d1_d3-e1_e4-f1
+      atomistic_preparation_status: representative_wurcs_defined_accession_unavailable
+      atomistic_preparation_notes: a single explicit representative mixed HS sequence was encoded via GlyCosmos to support screening, but this entry remains a heterogeneity proxy rather than a uniquely canonical biological structure for production docking or MD
     simulation_annotations:
       docking_role: heterogeneity_reference
       md_priority: high
@@ -308,7 +308,7 @@ variants:
       glytoucan_accession: null
       canonical_wurcs: null
       atomistic_preparation_status: exact_sequence_required
-      atomistic_preparation_notes: resolve the exact antithrombin-binding pentasaccharide sequence and WURCS accession before atomistic docking or MD
+      atomistic_preparation_notes: keep this as a representative anticoagulant sentinel until you choose a single exact antithrombin-binding pentasaccharide, because multiple 3-O-sulfated heparin or fondaparinux-like sequences can satisfy the current motif-level description
     simulation_annotations:
       docking_role: anticoagulant_risk_sentinel
       md_priority: high
