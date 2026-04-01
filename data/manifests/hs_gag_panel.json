@@ -1,0 +1,185 @@
+{
+  "manifest_id": "hs_gag_panel_v1",
+  "manifest_name": "Assumption-Based HS/GAG Selectivity Panel",
+  "entity_type": "gag_oligo",
+  "source_status": "assumption_based_seed_manifest",
+  "generated_by": "local_curated_manifest",
+  "records": [
+    {
+      "record_id": "HS-dp4-NAc",
+      "display_name": "HS dp4 NAc",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs", "negative_control", "unsulfated"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 0,
+        "panel_role": "baseline_negative_control"
+      },
+      "notes": "Use as the unsulfated charge-control entry when docking or calibrating selectivity."
+    },
+    {
+      "record_id": "HS-dp4-NS",
+      "display_name": "HS dp4 NS",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs", "motif_probe"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 2,
+        "panel_role": "sulfation_dependency_probe"
+      },
+      "notes": "Minimal sulfation probe for testing N-sulfation dependence."
+    },
+    {
+      "record_id": "HS-dp4-NS-2S",
+      "display_name": "HS dp4 NS 2S",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": "G13487SU",
+      "status": "registered_representative",
+      "tags": ["hs", "motif_probe", "registered"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 4,
+        "panel_role": "sulfation_position_probe"
+      },
+      "notes": "Representative sequence already linked to a registered GlyTouCan accession."
+    },
+    {
+      "record_id": "HS-dp4-NS-6S",
+      "display_name": "HS dp4 NS 6S",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs", "motif_probe"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 4,
+        "panel_role": "sulfation_position_probe"
+      },
+      "notes": "6-O-sulfation selectivity probe."
+    },
+    {
+      "record_id": "HS-dp6-mixed",
+      "display_name": "HS dp6 mixed",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs", "heterogeneity_probe"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 6,
+        "total_sulfates": 5,
+        "panel_role": "heterogeneity_probe"
+      },
+      "notes": "Representative heterogeneous HS target used as the main transport probe in the scorer."
+    },
+    {
+      "record_id": "HS-dp5-AT-motif",
+      "display_name": "HS dp5 AT motif",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "motif_only_requires_exact_sequence",
+      "tags": ["hs", "anticoagulant_sentinel", "3_o_sulfation"],
+      "attributes": {
+        "gag_class": "HS",
+        "degree_of_polymerization": 5,
+        "total_sulfates": 8,
+        "panel_role": "anticoagulant_risk_sentinel"
+      },
+      "notes": "Keep as a do-not-engage sentinel until an exact fondaparinux-like or native pentasaccharide is selected."
+    },
+    {
+      "record_id": "Heparin-dp6-highS",
+      "display_name": "Heparin dp6 highS",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["heparin", "positive_control", "high_sulfation"],
+      "attributes": {
+        "gag_class": "Hp",
+        "degree_of_polymerization": 6,
+        "total_sulfates": 9,
+        "panel_role": "high_sulfation_positive_control"
+      },
+      "notes": "Used to catch candidates that simply prefer globally hyper-sulfated glycans."
+    },
+    {
+      "record_id": "CS-A-dp4",
+      "display_name": "CS-A dp4",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["cs", "off_target", "negative_control"],
+      "attributes": {
+        "gag_class": "CS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 2,
+        "panel_role": "off_target_selectivity_negative"
+      },
+      "notes": "Selectivity control for CS-A."
+    },
+    {
+      "record_id": "CS-C-dp4",
+      "display_name": "CS-C dp4",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["cs", "off_target", "negative_control"],
+      "attributes": {
+        "gag_class": "CS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 2,
+        "panel_role": "off_target_selectivity_negative"
+      },
+      "notes": "Selectivity control for CS-C."
+    },
+    {
+      "record_id": "CS-E-dp4",
+      "display_name": "CS-E dp4",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["cs", "off_target", "high_charge_control"],
+      "attributes": {
+        "gag_class": "CS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 4,
+        "panel_role": "high_charge_off_target_negative"
+      },
+      "notes": "Highly sulfated CS negative that catches sulfate-density failure modes."
+    },
+    {
+      "record_id": "DS-dp4",
+      "display_name": "DS dp4",
+      "entity_type": "gag_oligo",
+      "source_db": "GlyTouCan",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["ds", "off_target", "negative_control"],
+      "attributes": {
+        "gag_class": "DS",
+        "degree_of_polymerization": 4,
+        "total_sulfates": 2,
+        "panel_role": "off_target_selectivity_negative"
+      },
+      "notes": "Dermatan sulfate control for iduronate-rich off-target binding."
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "manifest_id": "aggregate_structures_v1",
+  "manifest_name": "Assumption-Based Aggregate Structure Panel",
+  "entity_type": "aggregate_structure",
+  "source_status": "assumption_based_seed_manifest",
+  "generated_by": "local_curated_manifest",
+  "records": [
+    {
+      "record_id": "TAU_FIBRIL",
+      "display_name": "Tau Aggregate Reference",
+      "entity_type": "aggregate_structure",
+      "source_db": "PDB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["tau", "negative_design", "priority_high"],
+      "attributes": {
+        "panel_role": "primary_negative_design_target",
+        "recommended_assays": ["adsorption_panel", "colocalization"]
+      },
+      "notes": "Primary aggregate-negative-design panel entry motivated by HSPG-mediated tau uptake."
+    },
+    {
+      "record_id": "ABETA42_FIBRIL",
+      "display_name": "Abeta42 Aggregate Reference",
+      "entity_type": "aggregate_structure",
+      "source_db": "PDB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["abeta", "negative_design"],
+      "attributes": {
+        "panel_role": "secondary_negative_design_target",
+        "recommended_assays": ["adsorption_panel"]
+      },
+      "notes": "Secondary aggregate-negative-design panel entry for broader neurodegenerative specificity checks."
+    },
+    {
+      "record_id": "ASYNC_FIBRIL",
+      "display_name": "Alpha-Synuclein Aggregate Reference",
+      "entity_type": "aggregate_structure",
+      "source_db": "PDB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["alpha_synuclein", "negative_design"],
+      "attributes": {
+        "panel_role": "secondary_negative_design_target",
+        "recommended_assays": ["adsorption_panel"]
+      },
+      "notes": "Secondary aggregate-negative-design panel entry for future expansion beyond tau."
+    }
+  ]
+}

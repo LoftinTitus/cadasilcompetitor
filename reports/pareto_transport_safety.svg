@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+<rect width="100%" height="100%" fill="#fffdf8" />
+<text x="50" y="30" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#1f2937">Transport vs Safety Margin</text>
+<line x1="50" y1="370" x2="670" y2="370" stroke="#6b7280" stroke-width="2" />
+<line x1="50" y1="50" x2="50" y2="370" stroke="#6b7280" stroke-width="2" />
+<text x="360.00" y="408" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#374151">transport_reward</text>
+<text x="18" y="210.00" text-anchor="middle" transform="rotate(-90 18 210.00)" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#374151">safety_margin</text>
+<circle cx="642.89" cy="66.64" r="5" fill="#1d8f6a"><title>pep_00029: transport_reward=0.956, safety_margin=0.742</title></circle>
+<circle cx="642.89" cy="66.64" r="5" fill="#1d8f6a"><title>pep_00032: transport_reward=0.956, safety_margin=0.742</title></circle>
+<circle cx="642.89" cy="66.64" r="5" fill="#1d8f6a"><title>pep_00035: transport_reward=0.956, safety_margin=0.742</title></circle>
+<circle cx="642.89" cy="66.64" r="5" fill="#1d8f6a"><title>pep_00037: transport_reward=0.956, safety_margin=0.742</title></circle>
+<circle cx="608.89" cy="86.96" r="5" fill="#1d8f6a"><title>pep_00001: transport_reward=0.947, safety_margin=0.712</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00002: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00004: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00009: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00010: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00011: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="597.67" cy="93.53" r="5" fill="#1d8f6a"><title>pep_00012: transport_reward=0.944, safety_margin=0.703</title></circle>
+<circle cx="670.00" cy="50.00" r="5" fill="#d98f00"><title>pep_00027: transport_reward=0.963, safety_margin=0.766</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00028: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00030: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00031: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00033: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00036: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="655.61" cy="58.88" r="5" fill="#d98f00"><title>pep_00038: transport_reward=0.959, safety_margin=0.753</title></circle>
+<circle cx="649.88" cy="62.38" r="5" fill="#d98f00"><title>pep_00034: transport_reward=0.958, safety_margin=0.748</title></circle>
+<circle cx="649.88" cy="62.38" r="5" fill="#d98f00"><title>pep_00039: transport_reward=0.958, safety_margin=0.748</title></circle>
+<circle cx="592.61" cy="96.48" r="5" fill="#d98f00"><title>pep_00006: transport_reward=0.942, safety_margin=0.698</title></circle>
+<circle cx="592.61" cy="96.48" r="5" fill="#d98f00"><title>pep_00008: transport_reward=0.942, safety_margin=0.698</title></circle>
+<circle cx="587.48" cy="99.45" r="5" fill="#d98f00"><title>pep_00003: transport_reward=0.941, safety_margin=0.694</title></circle>
+<circle cx="587.48" cy="99.45" r="5" fill="#d98f00"><title>pep_00005: transport_reward=0.941, safety_margin=0.694</title></circle>
+<circle cx="587.48" cy="99.45" r="5" fill="#d98f00"><title>pep_00007: transport_reward=0.941, safety_margin=0.694</title></circle>
+<circle cx="587.48" cy="99.45" r="5" fill="#d98f00"><title>pep_00013: transport_reward=0.941, safety_margin=0.694</title></circle>
+<circle cx="522.93" cy="136.23" r="5" fill="#d98f00"><title>pep_00040: transport_reward=0.924, safety_margin=0.641</title></circle>
+<circle cx="495.40" cy="151.73" r="5" fill="#d98f00"><title>pep_00043: transport_reward=0.916, safety_margin=0.618</title></circle>
+<circle cx="495.40" cy="151.73" r="5" fill="#d98f00"><title>pep_00044: transport_reward=0.916, safety_margin=0.618</title></circle>
+<circle cx="495.40" cy="151.73" r="5" fill="#d98f00"><title>pep_00045: transport_reward=0.916, safety_margin=0.618</title></circle>
+<circle cx="495.40" cy="151.73" r="5" fill="#d98f00"><title>pep_00047: transport_reward=0.916, safety_margin=0.618</title></circle>
+<circle cx="495.40" cy="151.73" r="5" fill="#d98f00"><title>pep_00049: transport_reward=0.916, safety_margin=0.618</title></circle>
+<circle cx="485.84" cy="157.01" r="5" fill="#d98f00"><title>pep_00042: transport_reward=0.914, safety_margin=0.611</title></circle>
+<circle cx="471.94" cy="164.61" r="5" fill="#d98f00"><title>pep_00041: transport_reward=0.910, safety_margin=0.600</title></circle>
+<circle cx="471.94" cy="164.61" r="5" fill="#d98f00"><title>pep_00046: transport_reward=0.910, safety_margin=0.600</title></circle>
+<circle cx="471.94" cy="164.61" r="5" fill="#d98f00"><title>pep_00048: transport_reward=0.910, safety_margin=0.600</title></circle>
+<circle cx="471.94" cy="164.61" r="5" fill="#d98f00"><title>pep_00050: transport_reward=0.910, safety_margin=0.600</title></circle>
+<circle cx="79.99" cy="358.40" r="5" fill="#c53929"><title>pep_00014: transport_reward=0.806, safety_margin=0.319</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00015: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00017: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00022: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00023: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00024: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="63.69" cy="364.78" r="5" fill="#c53929"><title>pep_00025: transport_reward=0.801, safety_margin=0.310</title></circle>
+<circle cx="53.51" cy="368.67" r="5" fill="#c53929"><title>pep_00020: transport_reward=0.798, safety_margin=0.304</title></circle>
+<circle cx="53.51" cy="368.67" r="5" fill="#c53929"><title>pep_00026: transport_reward=0.798, safety_margin=0.304</title></circle>
+<circle cx="50.00" cy="370.00" r="5" fill="#c53929"><title>pep_00016: transport_reward=0.798, safety_margin=0.302</title></circle>
+<circle cx="50.00" cy="370.00" r="5" fill="#c53929"><title>pep_00018: transport_reward=0.798, safety_margin=0.302</title></circle>
+<circle cx="50.00" cy="370.00" r="5" fill="#c53929"><title>pep_00019: transport_reward=0.798, safety_margin=0.302</title></circle>
+<circle cx="50.00" cy="370.00" r="5" fill="#c53929"><title>pep_00021: transport_reward=0.798, safety_margin=0.302</title></circle>
+</svg>

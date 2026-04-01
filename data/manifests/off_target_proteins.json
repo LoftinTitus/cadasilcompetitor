@@ -1,0 +1,65 @@
+{
+  "manifest_id": "off_target_proteins_v1",
+  "manifest_name": "Assumption-Based Off-Target Protein Panel",
+  "entity_type": "protein_target",
+  "source_status": "assumption_based_seed_manifest",
+  "generated_by": "local_curated_manifest",
+  "records": [
+    {
+      "record_id": "AT3",
+      "display_name": "Antithrombin III",
+      "entity_type": "protein_target",
+      "source_db": "UniProtKB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["coagulation", "safety_gate", "heparin_binding"],
+      "attributes": {
+        "panel_role": "anticoagulant_risk_protein",
+        "recommended_assays": ["aPTT", "competition_binding"]
+      },
+      "notes": "Safety-relevant protein partner for the 3-O-sulfated anticoagulant sentinel."
+    },
+    {
+      "record_id": "FGF2",
+      "display_name": "Fibroblast Growth Factor 2",
+      "entity_type": "protein_target",
+      "source_db": "UniProtKB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs_binding", "growth_factor", "off_target_panel"],
+      "attributes": {
+        "panel_role": "hs_binding_protein_off_target",
+        "recommended_assays": ["competition_binding"]
+      },
+      "notes": "Representative HS-binding growth factor that can flag displacement-related liabilities."
+    },
+    {
+      "record_id": "VEGFA",
+      "display_name": "Vascular Endothelial Growth Factor A",
+      "entity_type": "protein_target",
+      "source_db": "UniProtKB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["hs_binding", "vascular", "off_target_panel"],
+      "attributes": {
+        "panel_role": "vascular_signaling_off_target",
+        "recommended_assays": ["competition_binding"]
+      },
+      "notes": "Potential vascular-signaling off-target in the BBB/NVU context."
+    },
+    {
+      "record_id": "LAMININ",
+      "display_name": "Laminin ECM Reference",
+      "entity_type": "protein_target",
+      "source_db": "UniProtKB",
+      "source_accession": null,
+      "status": "needs_programmatic_resolution",
+      "tags": ["ecm", "basement_membrane", "off_target_panel"],
+      "attributes": {
+        "panel_role": "ecm_context_reference",
+        "recommended_assays": ["matrix_binding_panel"]
+      },
+      "notes": "Representative ECM binder for future basement-membrane context expansion."
+    }
+  ]
+}
