@@ -17,15 +17,12 @@ from core.config_loader import (
 from simulation.binding_simulation import run_binding_simulation, run_binding_simulation_panel
 from simulation.candidate_property_estimation import estimate_candidate_properties
 
-TIER_B_VARIANT_IDS: tuple[str, ...] = ("HS-dp6-mixed", "HS-dp5-AT-motif")
-NON_SENTINEL_SULFATED_VARIANTS: tuple[str, ...] = (
-    "HS-dp4-NS",
-    "HS-dp4-NS-2S",
-    "HS-dp4-NS-6S",
-    "HS-dp6-mixed",
-)
-UNSULFATED_VARIANT_ID = "HS-dp4-NAc"
 ANTICOAGULANT_SENTINEL_ID = "HS-dp5-AT-motif"
+PREFERRED_TIER_B_VARIANT_IDS: tuple[str, ...] = (
+    "HS-dp6-mixed",
+    ANTICOAGULANT_SENTINEL_ID,
+    "Heparin-dp6-highS",
+)
 
 RANKED_CSV_FIELDS = [
     "rank",
@@ -44,16 +41,22 @@ RANKED_CSV_FIELDS = [
     "transport_reward",
     "residence_reward",
     "anticoagulant_penalty",
+    "off_target_penalty",
+    "heparin_penalty",
     "developability_penalty",
     "tier_a_sulfated_peak_mean",
     "tier_a_unsulfated_peak",
     "tier_a_anticoagulant_peak",
+    "tier_a_off_target_peak_mean",
+    "tier_a_heparin_peak",
     "tier_a_best_variant_id",
     "tier_a_best_variant_peak",
+    "transport_probe_variant_id",
     "tier_b_mixed_peak_mean_occupancy",
     "tier_b_mixed_penetration_depth_um",
     "tier_b_anticoagulant_peak_mean_occupancy",
     "tier_b_anticoagulant_penetration_depth_um",
+    "tier_b_heparin_peak_mean_occupancy",
     "estimated_diffusion_coefficient_um2_s",
     "estimated_clearance_rate_per_s",
     "estimated_association_rate_M_inv_s",
@@ -134,6 +137,13 @@ def screen_candidate(
         model_tier="A",
     )
     tier_a_result_by_variant = _map_results_by_variant_id(tier_a_panel["results"])
+    target_hs_variant_ids = _target_hs_variant_ids(hs_variant_panel)
+    unsulfated_variant_ids = _unsulfated_variant_ids(hs_variant_panel)
+    off_target_variant_ids = _off_target_variant_ids(hs_variant_panel)
+    heparin_variant_ids = _heparin_variant_ids(hs_variant_panel)
+    anticoagulant_variant_ids = _anticoagulant_variant_ids(hs_variant_panel)
+    tier_b_variant_ids = _tier_b_variant_ids(hs_variant_panel)
+    transport_probe_variant_id = _preferred_transport_variant_id(hs_variant_panel)
 
     tier_b_result_by_variant = {
         variant_id: run_binding_simulation(
@@ -143,7 +153,7 @@ def screen_candidate(
             hs_variant=_variant_by_id(hs_variant_panel, variant_id),
             model_tier="B",
         )
-        for variant_id in TIER_B_VARIANT_IDS
+        for variant_id in tier_b_variant_ids
     }
 
     warning_flags = _normalize_flag_list(candidate.get("warning_flags"))
@@ -153,47 +163,89 @@ def screen_candidate(
         filter_flags=filter_flags,
         tier_a_result_by_variant=tier_a_result_by_variant,
         tier_b_result_by_variant=tier_b_result_by_variant,
+        target_hs_variant_ids=target_hs_variant_ids,
+        off_target_variant_ids=off_target_variant_ids,
+        heparin_variant_ids=heparin_variant_ids,
+        transport_probe_variant_id=transport_probe_variant_id,
     )
 
     tier_a_sulfated_peak_mean = _mean(
         _tier_peak(tier_a_result_by_variant[variant_id])
-        for variant_id in NON_SENTINEL_SULFATED_VARIANTS
+        for variant_id in target_hs_variant_ids
+        if variant_id in tier_a_result_by_variant
     )
-    tier_a_unsulfated_peak = _tier_peak(tier_a_result_by_variant[UNSULFATED_VARIANT_ID])
-    tier_a_anticoagulant_peak = _tier_peak(
-        tier_a_result_by_variant[ANTICOAGULANT_SENTINEL_ID]
+    tier_a_unsulfated_peak = _max_or_zero(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in unsulfated_variant_ids
+        if variant_id in tier_a_result_by_variant
     )
-    tier_b_mixed_result = tier_b_result_by_variant["HS-dp6-mixed"]
-    tier_b_anticoagulant_result = tier_b_result_by_variant[ANTICOAGULANT_SENTINEL_ID]
+    tier_a_anticoagulant_peak = _max_or_zero(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in anticoagulant_variant_ids
+        if variant_id in tier_a_result_by_variant
+    )
+    tier_a_off_target_peak_mean = _mean(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in off_target_variant_ids
+        if variant_id in tier_a_result_by_variant
+    )
+    tier_a_heparin_peak = _max_or_zero(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in heparin_variant_ids
+        if variant_id in tier_a_result_by_variant
+    )
+    tier_b_transport_result = tier_b_result_by_variant[transport_probe_variant_id]
+    tier_b_anticoagulant_result = tier_b_result_by_variant.get(ANTICOAGULANT_SENTINEL_ID)
+    tier_b_heparin_result = _first_present_result(tier_b_result_by_variant, heparin_variant_ids)
+    tier_b_transport_peak = float(
+        tier_b_transport_result["summary"]["best_case_max_mean_occupancy_fraction"]
+    )
+    tier_b_anticoagulant_peak = (
+        float(tier_b_anticoagulant_result["summary"]["best_case_max_mean_occupancy_fraction"])
+        if tier_b_anticoagulant_result is not None
+        else 0.0
+    )
+    tier_b_heparin_peak = (
+        float(tier_b_heparin_result["summary"]["best_case_max_mean_occupancy_fraction"])
+        if tier_b_heparin_result is not None
+        else 0.0
+    )
 
     hs_affinity_reward = _clamp01(tier_a_sulfated_peak_mean)
-    hs_selectivity_reward = _clamp01(tier_a_sulfated_peak_mean - tier_a_unsulfated_peak)
+    hs_selectivity_reward = _clamp01(
+        tier_a_sulfated_peak_mean - max(tier_a_unsulfated_peak, tier_a_off_target_peak_mean)
+    )
     transport_reward = _clamp01(
-        0.65 * float(tier_b_mixed_result["summary"]["best_case_max_mean_occupancy_fraction"])
+        0.65 * float(tier_b_transport_result["summary"]["best_case_max_mean_occupancy_fraction"])
         + 0.35
         * _safe_fraction(
-            float(tier_b_mixed_result["summary"]["best_case_max_penetration_depth_um"]),
-            float(tier_b_mixed_result["operating_point"]["summary"]["domain_length_um"]),
+            float(tier_b_transport_result["summary"]["best_case_max_penetration_depth_um"]),
+            float(tier_b_transport_result["operating_point"]["summary"]["domain_length_um"]),
         )
     )
     residence_reward = _clamp01(
         math.log10(
             1.0
             + float(
-                tier_a_result_by_variant["HS-dp6-mixed"]["model_parameters"]["residence_time_s"]
+                tier_a_result_by_variant[transport_probe_variant_id]["model_parameters"][
+                    "residence_time_s"
+                ]
             )
         )
         / 4.0
     )
     anticoagulant_penalty = _clamp01(
-        0.55 * tier_a_anticoagulant_peak
-        + 0.45
-        * float(tier_b_anticoagulant_result["summary"]["best_case_max_mean_occupancy_fraction"])
-        + (
-            0.20
-            if tier_a_anticoagulant_peak >= _tier_peak(tier_a_result_by_variant["HS-dp6-mixed"])
-            else 0.0
-        )
+        (2.2 * max(0.0, tier_a_anticoagulant_peak - tier_a_sulfated_peak_mean))
+        + (1.6 * max(0.0, tier_b_anticoagulant_peak - tier_b_transport_peak))
+        + (0.8 * max(0.0, tier_a_anticoagulant_peak - 0.97))
+    )
+    off_target_penalty = _clamp01(
+        (1.7 * max(0.0, tier_a_off_target_peak_mean - tier_a_unsulfated_peak))
+        + (1.4 * max(0.0, tier_a_off_target_peak_mean - (0.88 * tier_a_sulfated_peak_mean)))
+    )
+    heparin_penalty = _clamp01(
+        (1.8 * max(0.0, tier_a_heparin_peak - tier_a_sulfated_peak_mean - 0.03))
+        + (1.2 * max(0.0, tier_b_heparin_peak - tier_b_transport_peak - 0.03))
     )
     developability_penalty = _compute_developability_penalty(
         warning_flags=warning_flags,
@@ -207,12 +259,18 @@ def screen_candidate(
         + (0.20 * transport_reward)
         + (0.10 * residence_reward)
         - (0.10 * anticoagulant_penalty)
+        - (0.07 * off_target_penalty)
+        - (0.03 * heparin_penalty)
         - (0.05 * developability_penalty)
     )
     screening_status = _determine_screening_status(
         filter_flags=filter_flags,
         risk_flags=risk_flags,
+        composite_screen_score=composite_screen_score,
+        hs_selectivity_reward=hs_selectivity_reward,
         anticoagulant_penalty=anticoagulant_penalty,
+        off_target_penalty=off_target_penalty,
+        heparin_penalty=heparin_penalty,
     )
 
     tier_a_best_variant_id, tier_a_best_variant_peak = _best_variant_peak(
@@ -237,26 +295,27 @@ def screen_candidate(
         "transport_reward": round(transport_reward, 6),
         "residence_reward": round(residence_reward, 6),
         "anticoagulant_penalty": round(anticoagulant_penalty, 6),
+        "off_target_penalty": round(off_target_penalty, 6),
+        "heparin_penalty": round(heparin_penalty, 6),
         "developability_penalty": round(developability_penalty, 6),
         "tier_a_sulfated_peak_mean": round(tier_a_sulfated_peak_mean, 6),
         "tier_a_unsulfated_peak": round(tier_a_unsulfated_peak, 6),
         "tier_a_anticoagulant_peak": round(tier_a_anticoagulant_peak, 6),
+        "tier_a_off_target_peak_mean": round(tier_a_off_target_peak_mean, 6),
+        "tier_a_heparin_peak": round(tier_a_heparin_peak, 6),
         "tier_a_best_variant_id": tier_a_best_variant_id,
         "tier_a_best_variant_peak": round(tier_a_best_variant_peak, 6),
+        "transport_probe_variant_id": transport_probe_variant_id,
         "tier_b_mixed_peak_mean_occupancy": round(
-            float(tier_b_mixed_result["summary"]["best_case_max_mean_occupancy_fraction"]),
+            float(tier_b_transport_result["summary"]["best_case_max_mean_occupancy_fraction"]),
             6,
         ),
         "tier_b_mixed_penetration_depth_um": round(
-            float(tier_b_mixed_result["summary"]["best_case_max_penetration_depth_um"]),
+            float(tier_b_transport_result["summary"]["best_case_max_penetration_depth_um"]),
             6,
         ),
         "tier_b_anticoagulant_peak_mean_occupancy": round(
-            float(
-                tier_b_anticoagulant_result["summary"][
-                    "best_case_max_mean_occupancy_fraction"
-                ]
-            ),
+            tier_b_anticoagulant_peak,
             6,
         ),
         "tier_b_anticoagulant_penetration_depth_um": round(
@@ -265,6 +324,10 @@ def screen_candidate(
                     "best_case_max_penetration_depth_um"
                 ]
             ),
+            6,
+        ),
+        "tier_b_heparin_peak_mean_occupancy": round(
+            tier_b_heparin_peak,
             6,
         ),
         "estimated_diffusion_coefficient_um2_s": round(
@@ -386,6 +449,70 @@ def _variant_by_id(
     raise KeyError(f"Could not find HS variant '{variant_id}' in panel '{panel.panel_id}'.")
 
 
+def _target_hs_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    return [
+        variant.variant_id
+        for variant in panel.variants
+        if variant.gag_class == "HS"
+        and variant.panel_role != "baseline_negative_control"
+        and variant.panel_role != "anticoagulant_risk_sentinel"
+        and not bool(variant.sulfation_pattern.get("contains_3_o_sulfation"))
+    ]
+
+
+def _unsulfated_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    return [
+        variant.variant_id
+        for variant in panel.variants
+        if variant.panel_role == "baseline_negative_control"
+        or float(variant.sulfation_pattern.get("total_sulfates", 0) or 0) <= 0.0
+    ]
+
+
+def _off_target_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    return [
+        variant.variant_id
+        for variant in panel.variants
+        if variant.gag_class in {"CS", "DS"}
+    ]
+
+
+def _heparin_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    return [
+        variant.variant_id
+        for variant in panel.variants
+        if variant.gag_class in {"Hp", "heparin"}
+    ]
+
+
+def _anticoagulant_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    return [
+        variant.variant_id
+        for variant in panel.variants
+        if variant.panel_role == "anticoagulant_risk_sentinel"
+        or bool(variant.sulfation_pattern.get("contains_3_o_sulfation"))
+    ]
+
+
+def _tier_b_variant_ids(panel: HSVariantPanelConfig) -> list[str]:
+    available_variant_ids = {variant.variant_id for variant in panel.variants}
+    selected = [
+        variant_id for variant_id in PREFERRED_TIER_B_VARIANT_IDS if variant_id in available_variant_ids
+    ]
+    if not selected:
+        selected = [panel.variants[0].variant_id]
+    return selected
+
+
+def _preferred_transport_variant_id(panel: HSVariantPanelConfig) -> str:
+    target_ids = _target_hs_variant_ids(panel)
+    if "HS-dp6-mixed" in target_ids:
+        return "HS-dp6-mixed"
+    if target_ids:
+        return target_ids[0]
+    return panel.variants[0].variant_id
+
+
 def _tier_peak(result: dict[str, Any]) -> float:
     summary = result["summary"]
     if "selection_peak_occupancy_fraction" in summary:
@@ -434,6 +561,10 @@ def _build_risk_flags(
     filter_flags: list[str],
     tier_a_result_by_variant: dict[str, dict[str, Any]],
     tier_b_result_by_variant: dict[str, dict[str, Any]],
+    target_hs_variant_ids: list[str],
+    off_target_variant_ids: list[str],
+    heparin_variant_ids: list[str],
+    transport_probe_variant_id: str,
 ) -> list[str]:
     risk_flags: list[str] = []
     if filter_flags:
@@ -444,17 +575,41 @@ def _build_risk_flags(
         risk_flags.append("uptake_risk")
 
     sentinel_peak = _tier_peak(tier_a_result_by_variant[ANTICOAGULANT_SENTINEL_ID])
-    mixed_peak = _tier_peak(tier_a_result_by_variant["HS-dp6-mixed"])
-    if sentinel_peak >= mixed_peak:
+    mixed_peak = _max_or_zero(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in target_hs_variant_ids
+        if variant_id in tier_a_result_by_variant
+    )
+    if sentinel_peak >= (mixed_peak + 0.04):
         risk_flags.append("anticoagulant_bias")
 
-    tier_b_mixed_penetration = float(
-        tier_b_result_by_variant["HS-dp6-mixed"]["summary"]["best_case_max_penetration_depth_um"]
+    off_target_peak = _mean(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in off_target_variant_ids
+        if variant_id in tier_a_result_by_variant
     )
-    tier_b_mixed_domain = float(
-        tier_b_result_by_variant["HS-dp6-mixed"]["operating_point"]["summary"]["domain_length_um"]
+    if off_target_peak >= max(0.45, 0.93 * mixed_peak):
+        risk_flags.append("off_target_binding")
+
+    heparin_peak = _max_or_zero(
+        _tier_peak(tier_a_result_by_variant[variant_id])
+        for variant_id in heparin_variant_ids
+        if variant_id in tier_a_result_by_variant
     )
-    if _safe_fraction(tier_b_mixed_penetration, tier_b_mixed_domain) < 0.25:
+    if heparin_peak > (mixed_peak + 0.05):
+        risk_flags.append("heparin_bias")
+
+    tier_b_transport_penetration = float(
+        tier_b_result_by_variant[transport_probe_variant_id]["summary"][
+            "best_case_max_penetration_depth_um"
+        ]
+    )
+    tier_b_transport_domain = float(
+        tier_b_result_by_variant[transport_probe_variant_id]["operating_point"]["summary"][
+            "domain_length_um"
+        ]
+    )
+    if _safe_fraction(tier_b_transport_penetration, tier_b_transport_domain) < 0.25:
         risk_flags.append("poor_penetration")
 
     return risk_flags
@@ -465,6 +620,24 @@ def _mean(values: Iterable[float]) -> float:
     if not values_list:
         return 0.0
     return sum(values_list) / len(values_list)
+
+
+def _max_or_zero(values: Iterable[float]) -> float:
+    values_list = list(values)
+    if not values_list:
+        return 0.0
+    return max(values_list)
+
+
+def _first_present_result(
+    result_by_variant_id: dict[str, dict[str, Any]],
+    ordered_variant_ids: Iterable[str],
+) -> dict[str, Any] | None:
+    for variant_id in ordered_variant_ids:
+        result = result_by_variant_id.get(variant_id)
+        if result is not None:
+            return result
+    return None
 
 
 def _safe_fraction(numerator: float, denominator: float) -> float:
@@ -481,13 +654,36 @@ def _determine_screening_status(
     *,
     filter_flags: list[str],
     risk_flags: list[str],
+    composite_screen_score: float,
+    hs_selectivity_reward: float,
     anticoagulant_penalty: float,
+    off_target_penalty: float,
+    heparin_penalty: float,
 ) -> str:
     if filter_flags:
         return "reject"
-    if risk_flags or anticoagulant_penalty >= 0.9:
+    severe_risk_flags = {"filter_fail", "aggregation_risk", "uptake_risk", "poor_penetration"}
+    if (
+        composite_screen_score >= 49.5
+        and hs_selectivity_reward >= 0.043
+        and anticoagulant_penalty <= 0.20
+        and off_target_penalty <= 0.14
+        and heparin_penalty <= 0.05
+        and not any(flag in severe_risk_flags for flag in risk_flags)
+    ):
+        return "pass"
+    if (
+        composite_screen_score < 28.0
+        or hs_selectivity_reward < 0.03
+        or anticoagulant_penalty >= 0.32
+        or off_target_penalty >= 0.35
+        or heparin_penalty >= 0.20
+        or "poor_penetration" in risk_flags
+    ):
+        return "reject"
+    if risk_flags:
         return "review"
-    return "pass"
+    return "review"
 
 
 def _screening_status_priority(status: str) -> int:

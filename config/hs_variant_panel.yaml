@@ -1,8 +1,8 @@
 schema_name: hs_variant_panel
 schema_version: 1
 panel_id: initial_hs_variant_panel_v1
-panel_name: Initial heparan sulfate variant panel
-panel_scope: hs_only
+panel_name: Initial HS selectivity panel
+panel_scope: hs_selectivity_and_off_target_controls
 source_status: assumption_based_seed_panel
 variants:
   - variant_id: HS-dp4-NAc
@@ -318,6 +318,276 @@ variants:
         - three_o_sulfation_sentinel
         - anticoagulant_risk_reference
       rationale: do-not-engage risk sentinel for peptides that may bind anticoagulant HS motifs
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: Heparin-dp6-highS
+    display_name: Heparin dp6 highS
+    gag_class: Hp
+    panel_role: high_sulfation_positive_control
+    chain_length:
+      degree_of_polymerization: 6
+      residue_count: 6
+      disaccharide_equivalents: 3.0
+      length_bucket: medium_oligo
+    sulfation_pattern:
+      label: highly sulfated heparin-like hexasaccharide
+      n_sulfation_count: 3
+      o2_sulfation_count: 3
+      o3_sulfation_count: 0
+      o6_sulfation_count: 3
+      total_sulfates: 9
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - IdoA2S
+        - GlcNS6S
+        - IdoA2S
+        - GlcNS6S
+        - IdoA2S
+        - GlcNS6S
+      uronic_acid_composition:
+        GlcA: 0
+        IdoA: 0
+        IdoA2S: 3
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 3
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -12
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_required
+      atomistic_preparation_notes: retain as a heparin-like positive control for benchmarking and stickiness detection until a single registered hexasaccharide reference is selected
+    simulation_annotations:
+      docking_role: positive_control
+      md_priority: medium
+      selectivity_comparison_group: initial_hs_panel_v1
+      expected_relative_affinity: high
+      benchmark_tags:
+        - high_sulfation_control
+        - heparin_reference
+      rationale: positive control that should expose candidates that simply prefer globally hyper-sulfated polyanions
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: CS-A-dp4
+    display_name: CS-A dp4
+    gag_class: CS
+    panel_role: off_target_selectivity_negative
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: chondroitin sulfate A dominant 4-O-sulfation
+      n_sulfation_count: 0
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 0
+      other_sulfation_count: 2
+      total_sulfates: 2
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GalNAc4S
+        - GlcA
+        - GalNAc4S
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -4
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_required
+      atomistic_preparation_notes: off-target selectivity control retained as an assumption-based representative CS-A tetrasaccharide
+    simulation_annotations:
+      docking_role: off_target_negative
+      md_priority: low
+      selectivity_comparison_group: initial_off_target_panel_v1
+      expected_relative_affinity: low
+      benchmark_tags:
+        - cs_a_negative
+        - off_target_control
+      rationale: selectivity negative that tests preference for HS over canonical CS-A sulfation
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: CS-C-dp4
+    display_name: CS-C dp4
+    gag_class: CS
+    panel_role: off_target_selectivity_negative
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: chondroitin sulfate C dominant 6-O-sulfation
+      n_sulfation_count: 0
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 2
+      total_sulfates: 2
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GalNAc6S
+        - GlcA
+        - GalNAc6S
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -4
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_required
+      atomistic_preparation_notes: off-target selectivity control retained as an assumption-based representative CS-C tetrasaccharide
+    simulation_annotations:
+      docking_role: off_target_negative
+      md_priority: low
+      selectivity_comparison_group: initial_off_target_panel_v1
+      expected_relative_affinity: low
+      benchmark_tags:
+        - cs_c_negative
+        - off_target_control
+      rationale: selectivity negative that tests sulfation-position sensitivity against a non-HS backbone
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: CS-E-dp4
+    display_name: CS-E dp4
+    gag_class: CS
+    panel_role: high_charge_off_target_negative
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: chondroitin sulfate E dominant 4,6-di-O-sulfation
+      n_sulfation_count: 0
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 2
+      other_sulfation_count: 2
+      total_sulfates: 4
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - GlcA
+        - GalNAc4S6S
+        - GlcA
+        - GalNAc4S6S
+      uronic_acid_composition:
+        GlcA: 2
+        IdoA: 0
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -6
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_required
+      atomistic_preparation_notes: high-charge CS control retained as an assumption-based representative CS-E tetrasaccharide
+    simulation_annotations:
+      docking_role: off_target_negative
+      md_priority: medium
+      selectivity_comparison_group: initial_off_target_panel_v1
+      expected_relative_affinity: low_to_medium
+      benchmark_tags:
+        - cs_e_negative
+        - sulfate_density_trap
+      rationale: highly sulfated CS negative that catches candidates that equate sulfate density with specificity
+    provenance:
+      source: README default v0 HS oligo panel
+      source_status: assumption_based_seed_panel
+
+  - variant_id: DS-dp4
+    display_name: DS dp4
+    gag_class: DS
+    panel_role: off_target_selectivity_negative
+    chain_length:
+      degree_of_polymerization: 4
+      residue_count: 4
+      disaccharide_equivalents: 2.0
+      length_bucket: short_oligo
+    sulfation_pattern:
+      label: dermatan sulfate representative IdoA plus GalNAc4S
+      n_sulfation_count: 0
+      o2_sulfation_count: 0
+      o3_sulfation_count: 0
+      o6_sulfation_count: 0
+      other_sulfation_count: 2
+      total_sulfates: 2
+      contains_3_o_sulfation: false
+    structural_annotations:
+      definition_status: representative_sequence_defined
+      residue_sequence_template:
+        - IdoA
+        - GalNAc4S
+        - IdoA
+        - GalNAc4S
+      uronic_acid_composition:
+        GlcA: 0
+        IdoA: 2
+        IdoA2S: 0
+      glucosamine_composition:
+        GlcNAc: 0
+        GlcNS: 0
+        GlcNAc6S: 0
+        GlcNS6S: 0
+        GlcNS3S: 0
+        GlcNS3S6S: 0
+      representative_formal_charge_at_ph_7_4: -4
+      glytoucan_accession: null
+      canonical_wurcs: null
+      atomistic_preparation_status: representative_sequence_required
+      atomistic_preparation_notes: off-target selectivity control retained as an assumption-based representative DS tetrasaccharide
+    simulation_annotations:
+      docking_role: off_target_negative
+      md_priority: low
+      selectivity_comparison_group: initial_off_target_panel_v1
+      expected_relative_affinity: low
+      benchmark_tags:
+        - ds_negative
+        - iduronate_control
+      rationale: DS negative that tests whether iduronate-rich off-targets also bind despite the non-HS backbone
     provenance:
       source: README default v0 HS oligo panel
       source_status: assumption_based_seed_panel

@@ -3,9 +3,16 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
-from scoring.screening import screen_candidates_from_csv
+if __package__ in {None, ""}:
+    project_root = Path(__file__).resolve().parents[1]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+    from scoring.screening import screen_candidates_from_csv
+else:
+    from .screening import screen_candidates_from_csv
 
 
 def build_parser() -> argparse.ArgumentParser:

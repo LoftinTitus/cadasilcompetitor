@@ -996,6 +996,10 @@ def _validate_hs_variant_config(
         sulfation_pattern["o6_sulfation_count"],
         f"{field_name}.sulfation_pattern.o6_sulfation_count",
     )
+    other_sulfation_count = _coerce_int(
+        sulfation_pattern.get("other_sulfation_count", 0),
+        f"{field_name}.sulfation_pattern.other_sulfation_count",
+    )
     total_sulfates = _coerce_int(
         sulfation_pattern["total_sulfates"],
         f"{field_name}.sulfation_pattern.total_sulfates",
@@ -1010,6 +1014,7 @@ def _validate_hs_variant_config(
         o2_sulfation_count,
         o3_sulfation_count,
         o6_sulfation_count,
+        other_sulfation_count,
         total_sulfates,
     ) < 0:
         raise ConfigValidationError(
@@ -1017,7 +1022,11 @@ def _validate_hs_variant_config(
             "must be greater than or equal to 0."
         )
     if total_sulfates != (
-        n_sulfation_count + o2_sulfation_count + o3_sulfation_count + o6_sulfation_count
+        n_sulfation_count
+        + o2_sulfation_count
+        + o3_sulfation_count
+        + o6_sulfation_count
+        + other_sulfation_count
     ):
         raise ConfigValidationError(
             f"Field '{field_name}.sulfation_pattern.total_sulfates' in '{config_path}' "

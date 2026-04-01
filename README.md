@@ -33,6 +33,44 @@ A rigorous, scalable approach is a **Python‑first orchestration layer** that a
 - A **config‑driven pipeline** that generates candidate peptides, computes sequence descriptors, runs multi‑fidelity scoring (cheap → expensive), trains a surrogate with uncertainty, and proposes next candidates via multiobjective Bayesian optimization. 
 - Reproducible **data manifests** and versioned panels for HS/CS/DS oligos, off‑target proteins, and aggregate structures using programmatic access to primary/official sources. 
 
+## Current local workflow
+
+The repo now supports a lightweight local workflow that stays within the heuristic modeling stack currently implemented in Python.
+
+1. Generate candidate peptides:
+
+```bash
+python3 -m peptide.run_generation
+```
+
+2. Score candidates against the current HS plus off-target GAG panel:
+
+```bash
+python3 -m scoring.run_screening --limit 50
+```
+
+This writes [ranked_candidates.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/ranked_candidates.csv) with affinity, selectivity, transport, anticoagulant-risk, heparin-bias, and off-target penalty columns.
+
+3. Train the lightweight surrogate and propose the next candidates to review:
+
+```bash
+python3 models/run_optimization.py --top-k 25
+```
+
+This writes [optimization_proposals.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/optimization_proposals.csv).
+
+4. Generate summary artifacts:
+
+```bash
+python3 reports/run_report.py
+```
+
+This writes [screening_summary.md](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/screening_summary.md), [pareto_frontier.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/pareto_frontier.csv), and simple SVG plots under [reports](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports).
+
+### Important limitation
+
+This current local workflow is still **heuristic**. It does **not** yet perform real docking, MD refinement, experimental-calibrated toxicity prediction, or programmatic accession resolution from external databases. Treat the outputs as triage aids for pipeline development, not final biological decisions.
+
 ## Inputs and recommended default starting set
 
 ### Inputs that must be extracted from the user’s paper
@@ -233,4 +271,3 @@ Repo organization:
 - Docking: CPU-parallel; scale with candidates × oligos; calibrate using protein–GAG docking benchmarks before trusting scores. 
 - MD: GPU recommended; explicit salt/water; allocate additional budget for sulfate/ion pairing sensitivity tests. 
 - PDE/ODE (Tier A/B): lightweight compared to MD; suitable for large sweeps and sensitivity analyses. 
-

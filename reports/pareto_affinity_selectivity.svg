@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="420" viewBox="0 0 720 420">
+<rect width="100%" height="100%" fill="#fffdf8" />
+<text x="50" y="30" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#1f2937">Affinity vs Selectivity</text>
+<line x1="50" y1="370" x2="670" y2="370" stroke="#6b7280" stroke-width="2" />
+<line x1="50" y1="50" x2="50" y2="370" stroke="#6b7280" stroke-width="2" />
+<text x="360.00" y="408" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#374151">hs_affinity_reward</text>
+<text x="18" y="210.00" text-anchor="middle" transform="rotate(-90 18 210.00)" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#374151">hs_selectivity_reward</text>
+<circle cx="640.45" cy="342.82" r="5" fill="#1d8f6a"><title>pep_00029: hs_affinity_reward=0.910, hs_selectivity_reward=0.043</title></circle>
+<circle cx="640.45" cy="342.82" r="5" fill="#1d8f6a"><title>pep_00032: hs_affinity_reward=0.910, hs_selectivity_reward=0.043</title></circle>
+<circle cx="640.45" cy="342.82" r="5" fill="#1d8f6a"><title>pep_00035: hs_affinity_reward=0.910, hs_selectivity_reward=0.043</title></circle>
+<circle cx="640.45" cy="342.82" r="5" fill="#1d8f6a"><title>pep_00037: hs_affinity_reward=0.910, hs_selectivity_reward=0.043</title></circle>
+<circle cx="603.75" cy="310.97" r="5" fill="#1d8f6a"><title>pep_00001: hs_affinity_reward=0.892, hs_selectivity_reward=0.051</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00002: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00004: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00009: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00010: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00011: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="591.71" cy="300.97" r="5" fill="#1d8f6a"><title>pep_00012: hs_affinity_reward=0.887, hs_selectivity_reward=0.053</title></circle>
+<circle cx="670.00" cy="370.00" r="5" fill="#d98f00"><title>pep_00027: hs_affinity_reward=0.925, hs_selectivity_reward=0.037</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00028: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00030: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00031: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00033: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00036: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="654.29" cy="355.38" r="5" fill="#d98f00"><title>pep_00038: hs_affinity_reward=0.917, hs_selectivity_reward=0.041</title></circle>
+<circle cx="648.06" cy="349.69" r="5" fill="#d98f00"><title>pep_00034: hs_affinity_reward=0.914, hs_selectivity_reward=0.042</title></circle>
+<circle cx="648.06" cy="349.69" r="5" fill="#d98f00"><title>pep_00039: hs_affinity_reward=0.914, hs_selectivity_reward=0.042</title></circle>
+<circle cx="586.30" cy="296.54" r="5" fill="#d98f00"><title>pep_00006: hs_affinity_reward=0.884, hs_selectivity_reward=0.054</title></circle>
+<circle cx="586.30" cy="296.54" r="5" fill="#d98f00"><title>pep_00008: hs_affinity_reward=0.884, hs_selectivity_reward=0.054</title></circle>
+<circle cx="580.81" cy="292.09" r="5" fill="#d98f00"><title>pep_00003: hs_affinity_reward=0.881, hs_selectivity_reward=0.055</title></circle>
+<circle cx="580.81" cy="292.09" r="5" fill="#d98f00"><title>pep_00005: hs_affinity_reward=0.881, hs_selectivity_reward=0.055</title></circle>
+<circle cx="580.81" cy="292.09" r="5" fill="#d98f00"><title>pep_00007: hs_affinity_reward=0.881, hs_selectivity_reward=0.055</title></circle>
+<circle cx="580.81" cy="292.09" r="5" fill="#d98f00"><title>pep_00013: hs_affinity_reward=0.881, hs_selectivity_reward=0.055</title></circle>
+<circle cx="512.70" cy="240.62" r="5" fill="#d98f00"><title>pep_00040: hs_affinity_reward=0.848, hs_selectivity_reward=0.066</title></circle>
+<circle cx="484.01" cy="220.93" r="5" fill="#d98f00"><title>pep_00043: hs_affinity_reward=0.834, hs_selectivity_reward=0.071</title></circle>
+<circle cx="484.01" cy="220.93" r="5" fill="#d98f00"><title>pep_00044: hs_affinity_reward=0.834, hs_selectivity_reward=0.071</title></circle>
+<circle cx="484.01" cy="220.93" r="5" fill="#d98f00"><title>pep_00045: hs_affinity_reward=0.834, hs_selectivity_reward=0.071</title></circle>
+<circle cx="484.01" cy="220.93" r="5" fill="#d98f00"><title>pep_00047: hs_affinity_reward=0.834, hs_selectivity_reward=0.071</title></circle>
+<circle cx="484.01" cy="220.93" r="5" fill="#d98f00"><title>pep_00049: hs_affinity_reward=0.834, hs_selectivity_reward=0.071</title></circle>
+<circle cx="474.12" cy="214.40" r="5" fill="#d98f00"><title>pep_00042: hs_affinity_reward=0.830, hs_selectivity_reward=0.072</title></circle>
+<circle cx="459.76" cy="205.17" r="5" fill="#d98f00"><title>pep_00041: hs_affinity_reward=0.823, hs_selectivity_reward=0.074</title></circle>
+<circle cx="459.76" cy="205.17" r="5" fill="#d98f00"><title>pep_00046: hs_affinity_reward=0.823, hs_selectivity_reward=0.074</title></circle>
+<circle cx="459.76" cy="205.17" r="5" fill="#d98f00"><title>pep_00048: hs_affinity_reward=0.823, hs_selectivity_reward=0.074</title></circle>
+<circle cx="459.76" cy="205.17" r="5" fill="#d98f00"><title>pep_00050: hs_affinity_reward=0.823, hs_selectivity_reward=0.074</title></circle>
+<circle cx="77.65" cy="54.45" r="5" fill="#c53929"><title>pep_00014: hs_affinity_reward=0.637, hs_selectivity_reward=0.108</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00015: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00017: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00022: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00023: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00024: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="62.59" cy="51.93" r="5" fill="#c53929"><title>pep_00025: hs_affinity_reward=0.630, hs_selectivity_reward=0.109</title></circle>
+<circle cx="53.24" cy="50.48" r="5" fill="#c53929"><title>pep_00020: hs_affinity_reward=0.625, hs_selectivity_reward=0.109</title></circle>
+<circle cx="53.24" cy="50.48" r="5" fill="#c53929"><title>pep_00026: hs_affinity_reward=0.625, hs_selectivity_reward=0.109</title></circle>
+<circle cx="50.00" cy="50.00" r="5" fill="#c53929"><title>pep_00016: hs_affinity_reward=0.624, hs_selectivity_reward=0.109</title></circle>
+<circle cx="50.00" cy="50.00" r="5" fill="#c53929"><title>pep_00018: hs_affinity_reward=0.624, hs_selectivity_reward=0.109</title></circle>
+<circle cx="50.00" cy="50.00" r="5" fill="#c53929"><title>pep_00019: hs_affinity_reward=0.624, hs_selectivity_reward=0.109</title></circle>
+<circle cx="50.00" cy="50.00" r="5" fill="#c53929"><title>pep_00021: hs_affinity_reward=0.624, hs_selectivity_reward=0.109</title></circle>
+</svg>
