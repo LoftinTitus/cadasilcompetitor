@@ -9,13 +9,44 @@ treated as screening priors, not calibrated biophysical truth.
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
+from pathlib import Path
 from typing import Any
 
 from core.config_loader import CandidateProperties
+from models.property_surrogate import (
+    DEFAULT_PROPERTY_ESTIMATOR_PATH,
+    PropertySurrogate,
+    try_load_property_surrogate,
+)
 from peptide.metadata import compute_sequence_metadata
 
+_PROPERTY_SURROGATE_CACHE: dict[Path, PropertySurrogate | None] = {}
 
-def estimate_candidate_properties(candidate: Any) -> CandidateProperties:
+
+def estimate_candidate_properties(
+    candidate: Any,
+    *,
+    learned_estimator: PropertySurrogate | None = None,
+    property_estimator_path: str | Path | None = DEFAULT_PROPERTY_ESTIMATOR_PATH,
+) -> CandidateProperties:
+    """Estimate transport and kinetic properties from peptide sequence features."""
+
+    heuristic_properties = _estimate_candidate_properties_heuristic(candidate)
+    resolved_estimator = learned_estimator or _load_cached_property_estimator(property_estimator_path)
+    if resolved_estimator is None:
+        return heuristic_properties
+
+    learned_properties = resolved_estimator.predict_candidate_properties(
+        _candidate_to_mapping(candidate)
+    )
+    return _blend_candidate_properties(
+        heuristic_properties=heuristic_properties,
+        learned_properties=learned_properties,
+        learned_weight=0.7,
+    )
+
+
+def _estimate_candidate_properties_heuristic(candidate: Any) -> CandidateProperties:
     """Estimate transport and kinetic properties from peptide sequence features."""
 
     metadata = _extract_candidate_metadata(candidate)
@@ -136,10 +167,14 @@ def estimate_candidate_properties_with_diagnostics(candidate: Any) -> dict[str, 
     """Return estimated properties plus the features used to derive them."""
 
     metadata = _extract_candidate_metadata(candidate)
-    properties = estimate_candidate_properties(candidate)
+    heuristic_properties = _estimate_candidate_properties_heuristic(candidate)
+    learned_estimator = _load_cached_property_estimator(DEFAULT_PROPERTY_ESTIMATOR_PATH)
+    properties = estimate_candidate_properties(candidate, learned_estimator=learned_estimator)
     return {
         "candidate_properties": properties,
         "candidate_properties_dict": asdict(properties),
+        "heuristic_candidate_properties_dict": asdict(heuristic_properties),
+        "property_estimation_mode": "learned_blend" if learned_estimator is not None else "heuristic",
         "sequence_metadata": metadata,
         "warning_flags": _extract_flag_list(candidate, "warning_flags"),
         "filter_flags": _extract_flag_list(candidate, "filter_flags"),
@@ -194,3 +229,43 @@ def _read_candidate_value(candidate: Any, field_name: str) -> Any:
 
 def _clamp(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(value, maximum))
+
+
+def _candidate_to_mapping(candidate: Any) -> dict[str, Any]:
+    if isinstance(candidate, dict):
+        return dict(candidate)
+    metadata = _extract_candidate_metadata(candidate)
+    return {
+        "sequence": _read_candidate_value(candidate, "sequence"),
+        **metadata,
+        "warning_flags": _extract_flag_list(candidate, "warning_flags"),
+        "filter_flags": _extract_flag_list(candidate, "filter_flags"),
+    }
+
+
+def _blend_candidate_properties(
+    *,
+    heuristic_properties: CandidateProperties,
+    learned_properties: CandidateProperties,
+    learned_weight: float,
+) -> CandidateProperties:
+    heuristic_dict = asdict(heuristic_properties)
+    learned_dict = asdict(learned_properties)
+    blended = {
+        field_name: ((learned_weight * float(learned_dict[field_name])) + ((1.0 - learned_weight) * float(heuristic_dict[field_name])))
+        for field_name in heuristic_dict
+    }
+    return CandidateProperties(**blended)
+
+
+def _load_cached_property_estimator(
+    property_estimator_path: str | Path | None,
+) -> PropertySurrogate | None:
+    if property_estimator_path is None:
+        return None
+    estimator_path = Path(property_estimator_path)
+    if estimator_path in _PROPERTY_SURROGATE_CACHE:
+        return _PROPERTY_SURROGATE_CACHE[estimator_path]
+    estimator = try_load_property_surrogate(estimator_path)
+    _PROPERTY_SURROGATE_CACHE[estimator_path] = estimator
+    return estimator

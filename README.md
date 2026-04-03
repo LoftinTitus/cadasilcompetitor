@@ -71,10 +71,11 @@ This writes [ranked_candidates.csv](/Users/tyloftin/Documents/Programming/cadasi
 3. Train the lightweight surrogate and propose the next candidates to review:
 
 ```bash
+python3 -m models.run_property_training
 python3 models/run_optimization.py --top-k 25
 ```
 
-This writes [optimization_proposals.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/optimization_proposals.csv).
+The first command writes [property_estimator.json](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/property_estimator.json), a lightweight ML surrogate that learns candidate transport and kinetic properties from ranked rows. When present, the simulation property estimator blends this learned model with the heuristic baseline. The second command writes [optimization_proposals.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/optimization_proposals.csv).
 
 4. Generate summary artifacts:
 
