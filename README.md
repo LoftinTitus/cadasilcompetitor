@@ -37,6 +37,23 @@ A rigorous, scalable approach is a **Python‑first orchestration layer** that a
 
 The repo now supports a lightweight local workflow that stays within the heuristic modeling stack currently implemented in Python.
 
+### Quick start
+
+The project currently runs on the Python standard library plus an optional `PyYAML` install. The config loader falls back to a bundled parser if `yaml` is unavailable, so the workflow works out of the box with plain `python3`.
+
+You can run the common commands either directly:
+
+```bash
+python3 -m unittest discover -s tests -q
+```
+
+or through the repo `Makefile`:
+
+```bash
+make test
+make pipeline
+```
+
 1. Generate candidate peptides:
 
 ```bash
@@ -65,7 +82,15 @@ This writes [optimization_proposals.csv](/Users/tyloftin/Documents/Programming/c
 python3 reports/run_report.py
 ```
 
-This writes [screening_summary.md](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/screening_summary.md), [pareto_frontier.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/pareto_frontier.csv), and simple SVG plots under [reports](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports).
+This writes [screening_summary.md](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/screening_summary.md), [manifest_validation_summary.md](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/manifest_validation_summary.md), [pareto_frontier.csv](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/pareto_frontier.csv), and simple SVG plots under [reports](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports).
+
+5. Validate panel/manifest alignment directly:
+
+```bash
+python3 -m core.run_manifest_validation
+```
+
+This writes [manifest_validation_summary.md](/Users/tyloftin/Documents/Programming/cadasilcompetitor/reports/manifest_validation_summary.md) and makes unresolved external-data dependencies visible without reading the raw JSON manifests.
 
 ### Important limitation
 

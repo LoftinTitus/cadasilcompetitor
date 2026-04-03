@@ -6,13 +6,19 @@
 - Review: 26
 - Reject: 13
 
+## Manifest Readiness
+
+- HS panel readiness fraction: 0.091
+- HS panel unresolved variant count: 10
+- HS panel missing manifest record count: 0
+
 ## Top Ranked Candidates
 
-- pep_00029 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956
-- pep_00032 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956
-- pep_00035 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956
-- pep_00037 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956
-- pep_00001 | score=50.19 | status=pass | hs_selectivity=0.051 | transport=0.947
+- pep_00029 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956 | best_variant=HS-dp5-AT-motif (motif_only_requires_exact_sequence)
+- pep_00032 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956 | best_variant=HS-dp5-AT-motif (motif_only_requires_exact_sequence)
+- pep_00035 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956 | best_variant=HS-dp5-AT-motif (motif_only_requires_exact_sequence)
+- pep_00037 | score=51.18 | status=pass | hs_selectivity=0.043 | transport=0.956 | best_variant=HS-dp5-AT-motif (motif_only_requires_exact_sequence)
+- pep_00001 | score=50.19 | status=pass | hs_selectivity=0.051 | transport=0.947 | best_variant=HS-dp5-AT-motif (motif_only_requires_exact_sequence)
 
 ## Manifest Coverage
 
@@ -22,8 +28,8 @@
 
 ## Top Surrogate Proposals
 
-- pep_00561 | acquisition=0.472 | predicted_score=42.29 | novelty=0.928
-- pep_00564 | acquisition=0.472 | predicted_score=42.29 | novelty=0.927
-- pep_00570 | acquisition=0.472 | predicted_score=42.27 | novelty=0.926
-- pep_00572 | acquisition=0.472 | predicted_score=42.27 | novelty=0.926
-- pep_00366 | acquisition=0.471 | predicted_score=42.04 | novelty=0.921
+- pep_00561 | acquisition=0.577 | predicted_score=56.41 | novelty=0.928
+- pep_00570 | acquisition=0.577 | predicted_score=56.42 | novelty=0.926
+- pep_00572 | acquisition=0.577 | predicted_score=56.42 | novelty=0.926
+- pep_00564 | acquisition=0.577 | predicted_score=56.41 | novelty=0.927
+- pep_00366 | acquisition=0.573 | predicted_score=55.76 | novelty=0.921

@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadasilcompetitor"
+version = "0.1.0"
+description = "Heuristic local pipeline for HS-selective peptide generation, screening, optimization, and reporting."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "OpenAI Codex" }
+]
+keywords = ["peptide", "heparan-sulfate", "screening", "simulation", "optimization"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[project.scripts]
+cadasil-generate = "peptide.run_generation:main"
+cadasil-screen = "scoring.run_screening:main"
+cadasil-optimize = "models.run_optimization:main"
+cadasil-report = "reports.run_report:main"
+cadasil-validate-manifests = "core.run_manifest_validation:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["core", "models", "peptide", "reports", "scoring", "simulation"]

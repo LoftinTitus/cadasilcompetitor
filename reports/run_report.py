@@ -14,9 +14,11 @@ if __package__ in {None, ""}:
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
     from core.manifest_loader import load_data_manifest, summarize_manifest
+    from core.manifest_registry import build_manifest_validation_summary, load_default_hs_resources
     from models.optimization import pareto_frontier
 else:
     from core.manifest_loader import load_data_manifest, summarize_manifest
+    from core.manifest_registry import build_manifest_validation_summary, load_default_hs_resources
     from models.optimization import pareto_frontier
 
 
@@ -121,6 +123,18 @@ def main() -> int:
         manifest_summaries=manifest_summaries,
     )
     (output_dir / "screening_summary.md").write_text(summary_markdown, encoding="utf-8")
+
+    hs_panel, hs_manifest = load_default_hs_resources()
+    manifest_validation_markdown = build_manifest_validation_summary(
+        hs_panel=hs_panel,
+        hs_manifest=hs_manifest,
+        off_target_manifest=load_data_manifest("data/manifests/off_target_proteins.json"),
+        aggregate_manifest=load_data_manifest("data/manifests/aggregate_structures.json"),
+    )
+    (output_dir / "manifest_validation_summary.md").write_text(
+        manifest_validation_markdown,
+        encoding="utf-8",
+    )
 
     print(f"Ranked rows loaded: {len(ranked_rows)}")
     print(f"Pareto rows written: {len(pareto_rows)}")
@@ -269,16 +283,40 @@ def _build_summary_markdown(
         f"- Review: {by_status['review']}",
         f"- Reject: {by_status['reject']}",
         "",
+        "## Manifest Readiness",
+        "",
+    ]
+
+    if ranked_rows:
+        first_row = ranked_rows[0]
+        lines.extend(
+            [
+                "- "
+                f"HS panel readiness fraction: {float(first_row.get('hs_panel_manifest_readiness_fraction', 0.0) or 0.0):.3f}",
+                "- "
+                f"HS panel unresolved variant count: {int(first_row.get('hs_panel_manifest_unresolved_variant_count', 0) or 0)}",
+                "- "
+                f"HS panel missing manifest record count: {int(first_row.get('hs_panel_manifest_missing_record_count', 0) or 0)}",
+                "",
+            ]
+        )
+    else:
+        lines.extend(["- No ranked rows available to summarize manifest readiness.", ""])
+
+    lines.extend(
+        [
         "## Top Ranked Candidates",
         "",
     ]
+    )
 
     for row in top_rows:
         lines.append(
             "- "
             f"{row.get('candidate_id', '')} | score={float(row.get('composite_screen_score', 0.0)):.2f} | "
             f"status={row.get('screening_status', '')} | hs_selectivity={float(row.get('hs_selectivity_reward', 0.0)):.3f} | "
-            f"transport={float(row.get('transport_reward', 0.0)):.3f}"
+            f"transport={float(row.get('transport_reward', 0.0)):.3f} | "
+            f"best_variant={row.get('tier_a_best_variant_id', '')} ({row.get('tier_a_best_variant_manifest_status', 'unknown')})"
         )
 
     lines.extend(["", "## Manifest Coverage", ""])
