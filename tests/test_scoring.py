@@ -57,6 +57,9 @@ class ScreeningTests(unittest.TestCase):
 
         self.assertIn("composite_screen_score", row)
         self.assertIn("tier_a_best_variant_id", row)
+        self.assertIn("tier_a_best_variant_manifest_status", row)
+        self.assertIn("transport_probe_variant_manifest_status", row)
+        self.assertIn("hs_panel_manifest_readiness_fraction", row)
         self.assertIn("tier_b_mixed_peak_mean_occupancy", row)
         self.assertIn("estimated_association_rate_M_inv_s", row)
         self.assertEqual(row["candidate_id"], "pep_safe")

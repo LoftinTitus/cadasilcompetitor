@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 import math
 import random
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from .features import FEATURE_NAMES, extract_feature_vector
@@ -21,6 +23,19 @@ class FeatureScaler:
             for value, mean, scale in zip(values, self.means, self.scales)
         ]
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "means": list(self.means),
+            "scales": list(self.scales),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> FeatureScaler:
+        return cls(
+            means=tuple(float(value) for value in payload["means"]),
+            scales=tuple(float(value) for value in payload["scales"]),
+        )
+
 
 @dataclass(frozen=True, slots=True)
 class RidgeModel:
@@ -33,6 +48,21 @@ class RidgeModel:
         return self.intercept + sum(
             coefficient * value
             for coefficient, value in zip(self.coefficients, transformed)
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "scaler": self.scaler.to_dict(),
+            "intercept": self.intercept,
+            "coefficients": list(self.coefficients),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> RidgeModel:
+        return cls(
+            scaler=FeatureScaler.from_dict(payload["scaler"]),
+            intercept=float(payload["intercept"]),
+            coefficients=tuple(float(value) for value in payload["coefficients"]),
         )
 
 
@@ -54,6 +84,35 @@ class BootstrapSurrogate:
                 "max": max(values),
             }
         return predictions
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "feature_names": list(self.feature_names),
+            "target_models": {
+                target_field: [model.to_dict() for model in models]
+                for target_field, models in self.target_models.items()
+            },
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> BootstrapSurrogate:
+        return cls(
+            feature_names=tuple(str(name) for name in payload["feature_names"]),
+            target_models={
+                str(target_field): tuple(RidgeModel.from_dict(model) for model in models)
+                for target_field, models in payload["target_models"].items()
+            },
+        )
+
+    def write_json(self, path: str | Path) -> None:
+        destination = Path(path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
+
+    @classmethod
+    def read_json(cls, path: str | Path) -> BootstrapSurrogate:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        return cls.from_dict(payload)
 
 
 def fit_bootstrap_surrogate(

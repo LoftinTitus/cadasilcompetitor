@@ -14,6 +14,8 @@ from core.config_loader import (
     load_hs_variant_panel,
     load_simulation_config,
 )
+from core.manifest_loader import DataManifest, load_data_manifest
+from core.manifest_registry import annotate_hs_panel_variants, summarize_hs_panel_readiness
 from simulation.binding_simulation import run_binding_simulation, run_binding_simulation_panel
 from simulation.candidate_property_estimation import estimate_candidate_properties
 
@@ -50,8 +52,16 @@ RANKED_CSV_FIELDS = [
     "tier_a_off_target_peak_mean",
     "tier_a_heparin_peak",
     "tier_a_best_variant_id",
+    "tier_a_best_variant_display_name",
     "tier_a_best_variant_peak",
+    "tier_a_best_variant_manifest_status",
+    "tier_a_best_variant_atomistic_status",
+    "tier_a_best_variant_glytoucan_accession",
     "transport_probe_variant_id",
+    "transport_probe_variant_display_name",
+    "transport_probe_variant_manifest_status",
+    "transport_probe_variant_atomistic_status",
+    "transport_probe_variant_glytoucan_accession",
     "tier_b_mixed_peak_mean_occupancy",
     "tier_b_mixed_penetration_depth_um",
     "tier_b_anticoagulant_peak_mean_occupancy",
@@ -65,6 +75,10 @@ RANKED_CSV_FIELDS = [
     "estimated_half_life_s",
     "estimated_enzymatic_degradation_rate_per_s",
     "estimated_spontaneous_degradation_rate_per_s",
+    "hs_panel_manifest_readiness_fraction",
+    "hs_panel_manifest_unresolved_variant_count",
+    "hs_panel_manifest_missing_record_count",
+    "hs_panel_source_status",
     "risk_flags",
 ]
 
@@ -75,6 +89,7 @@ def screen_candidates_from_csv(
     output_csv_path: str | Path | None = None,
     simulation_config: SimulationConfig | None = None,
     hs_variant_panel: HSVariantPanelConfig | None = None,
+    hs_gag_manifest: DataManifest | None = None,
     limit: int | None = None,
 ) -> list[dict[str, object]]:
     candidates = load_candidates_from_csv(candidate_csv_path, limit=limit)
@@ -82,6 +97,7 @@ def screen_candidates_from_csv(
         candidates,
         simulation_config=simulation_config,
         hs_variant_panel=hs_variant_panel,
+        hs_gag_manifest=hs_gag_manifest,
     )
     if output_csv_path is not None:
         write_ranked_candidates_csv(output_csv_path, ranked_rows)
@@ -93,17 +109,20 @@ def rank_candidates(
     *,
     simulation_config: SimulationConfig | None = None,
     hs_variant_panel: HSVariantPanelConfig | None = None,
+    hs_gag_manifest: DataManifest | None = None,
 ) -> list[dict[str, object]]:
     resolved_simulation_config = simulation_config or load_simulation_config(
         "config/physiology.yaml"
     )
     resolved_panel = hs_variant_panel or load_hs_variant_panel("config/hs_variant_panel.yaml")
+    resolved_manifest = hs_gag_manifest or load_data_manifest("data/manifests/hs_gag_panel.json")
 
     scored_rows = [
         screen_candidate(
             candidate,
             simulation_config=resolved_simulation_config,
             hs_variant_panel=resolved_panel,
+            hs_gag_manifest=resolved_manifest,
         )
         for candidate in candidates
     ]
@@ -127,7 +146,11 @@ def screen_candidate(
     *,
     simulation_config: SimulationConfig,
     hs_variant_panel: HSVariantPanelConfig,
+    hs_gag_manifest: DataManifest | None = None,
 ) -> dict[str, object]:
+    resolved_manifest = hs_gag_manifest or load_data_manifest("data/manifests/hs_gag_panel.json")
+    manifest_annotations = annotate_hs_panel_variants(hs_variant_panel, resolved_manifest)
+    manifest_readiness = summarize_hs_panel_readiness(hs_variant_panel, resolved_manifest)
     candidate_properties = estimate_candidate_properties(candidate)
     tier_a_panel = run_binding_simulation_panel(
         candidate,
@@ -277,6 +300,8 @@ def screen_candidate(
         tier_a_result_by_variant
     )
     candidate_properties_dict = tier_a_panel["results"][0]["candidate_properties"]
+    best_variant_annotation = manifest_annotations.get(tier_a_best_variant_id)
+    transport_variant_annotation = manifest_annotations.get(transport_probe_variant_id)
 
     return {
         "rank": 0,
@@ -304,8 +329,40 @@ def screen_candidate(
         "tier_a_off_target_peak_mean": round(tier_a_off_target_peak_mean, 6),
         "tier_a_heparin_peak": round(tier_a_heparin_peak, 6),
         "tier_a_best_variant_id": tier_a_best_variant_id,
+        "tier_a_best_variant_display_name": _annotation_value(
+            best_variant_annotation,
+            "display_name",
+        ),
         "tier_a_best_variant_peak": round(tier_a_best_variant_peak, 6),
+        "tier_a_best_variant_manifest_status": _annotation_value(
+            best_variant_annotation,
+            "manifest_status",
+        ),
+        "tier_a_best_variant_atomistic_status": _annotation_value(
+            best_variant_annotation,
+            "atomistic_preparation_status",
+        ),
+        "tier_a_best_variant_glytoucan_accession": _annotation_value(
+            best_variant_annotation,
+            "glytoucan_accession",
+        ),
         "transport_probe_variant_id": transport_probe_variant_id,
+        "transport_probe_variant_display_name": _annotation_value(
+            transport_variant_annotation,
+            "display_name",
+        ),
+        "transport_probe_variant_manifest_status": _annotation_value(
+            transport_variant_annotation,
+            "manifest_status",
+        ),
+        "transport_probe_variant_atomistic_status": _annotation_value(
+            transport_variant_annotation,
+            "atomistic_preparation_status",
+        ),
+        "transport_probe_variant_glytoucan_accession": _annotation_value(
+            transport_variant_annotation,
+            "glytoucan_accession",
+        ),
         "tier_b_mixed_peak_mean_occupancy": round(
             float(tier_b_transport_result["summary"]["best_case_max_mean_occupancy_fraction"]),
             6,
@@ -359,6 +416,17 @@ def screen_candidate(
             float(candidate_properties_dict["spontaneous_degradation_rate_per_s"]),
             9,
         ),
+        "hs_panel_manifest_readiness_fraction": round(
+            float(manifest_readiness["readiness_fraction"]),
+            6,
+        ),
+        "hs_panel_manifest_unresolved_variant_count": len(
+            manifest_readiness["unresolved_variant_ids"]
+        ),
+        "hs_panel_manifest_missing_record_count": len(
+            manifest_readiness["missing_in_manifest"]
+        ),
+        "hs_panel_source_status": hs_variant_panel.source_status,
         "risk_flags": ";".join(risk_flags),
     }
 
@@ -644,6 +712,15 @@ def _safe_fraction(numerator: float, denominator: float) -> float:
     if denominator <= 0.0:
         return 0.0
     return numerator / denominator
+
+
+def _annotation_value(annotation: Any, attribute_name: str) -> str:
+    if annotation is None:
+        return ""
+    value = getattr(annotation, attribute_name, "")
+    if value is None:
+        return ""
+    return str(value)
 
 
 def _clamp01(value: float) -> float:
