@@ -6,6 +6,7 @@ import math
 from typing import Any, Iterable
 
 from .features import FEATURE_NAMES, extract_feature_vector
+from .screening_calibrator import ScreeningCalibrator
 from .surrogate import BootstrapSurrogate
 
 MAXIMIZE_FIELDS: tuple[str, ...] = (
@@ -68,13 +69,18 @@ def propose_candidates(
     *,
     trained_surrogate: BootstrapSurrogate,
     reference_rows: list[dict[str, Any]],
+    screening_calibrator: ScreeningCalibrator | None = None,
     top_k: int = 50,
+    allow_seen: bool = False,
 ) -> list[dict[str, Any]]:
     seen_sequences = {str(row.get("sequence", "") or "") for row in reference_rows}
     proposals: list[dict[str, Any]] = []
     for candidate in candidate_pool_rows:
         sequence = str(candidate.get("sequence", "") or "")
-        if not sequence or sequence in seen_sequences:
+        if not sequence:
+            continue
+        is_seen_sequence = sequence in seen_sequences
+        if is_seen_sequence and not allow_seen:
             continue
         warning_flags = _normalize_flag_list(candidate.get("warning_flags"))
         filter_flags = _normalize_flag_list(candidate.get("filter_flags"))
@@ -88,6 +94,17 @@ def propose_candidates(
             novelty_score,
             warning_flags=warning_flags,
         )
+        ml_screening_summary = (
+            screening_calibrator.predict_summary(candidate)
+            if screening_calibrator is not None
+            else {
+                "ml_screening_score": "",
+                "ml_predicted_composite_score": "",
+                "ml_screening_uncertainty": "",
+            }
+        )
+        if screening_calibrator is not None:
+            acquisition_score += _compute_screening_calibration_boost(ml_screening_summary)
         predicted_composite_score = 100.0 * (
             (0.35 * predictions["hs_affinity_reward"]["mean"])
             + (0.20 * predictions["hs_selectivity_reward"]["mean"])
@@ -102,6 +119,7 @@ def propose_candidates(
             {
                 "candidate_id": candidate.get("candidate_id", ""),
                 "sequence": sequence,
+                "proposal_source": "screened_rerank" if is_seen_sequence else "novel_pool",
                 "length": candidate.get("length", len(sequence)),
                 "approx_net_charge": candidate.get("approx_net_charge", ""),
                 "warning_flags": warning_flags,
@@ -109,6 +127,18 @@ def propose_candidates(
                 "acquisition_score": round(acquisition_score, 6),
                 "novelty_score": round(novelty_score, 6),
                 "uncertainty_score": round(_mean_uncertainty(predictions), 6),
+                "ml_screening_score": _round_or_empty(
+                    ml_screening_summary["ml_screening_score"],
+                    6,
+                ),
+                "ml_predicted_composite_score": _round_or_empty(
+                    ml_screening_summary["ml_predicted_composite_score"],
+                    6,
+                ),
+                "ml_screening_uncertainty": _round_or_empty(
+                    ml_screening_summary["ml_screening_uncertainty"],
+                    6,
+                ),
                 "predicted_composite_score": round(predicted_composite_score, 6),
                 "pred_hs_affinity_reward": round(predictions["hs_affinity_reward"]["mean"], 6),
                 "pred_hs_selectivity_reward": round(
@@ -152,6 +182,17 @@ def propose_candidates(
         row["warning_flags"] = ";".join(row["warning_flags"])
         row["filter_flags"] = ";".join(row["filter_flags"])
     return proposals[:top_k]
+
+
+def _compute_screening_calibration_boost(ml_screening_summary: dict[str, float | str]) -> float:
+    screening_score = float(ml_screening_summary["ml_screening_score"])
+    predicted_composite_score = float(ml_screening_summary["ml_predicted_composite_score"])
+    uncertainty = float(ml_screening_summary["ml_screening_uncertainty"])
+    return (
+        (0.12 * (screening_score - 0.5))
+        + (0.05 * ((predicted_composite_score / 100.0) - 0.5))
+        - (0.04 * uncertainty)
+    )
 
 
 def _compute_acquisition_score(
@@ -270,6 +311,12 @@ def _dominates(
 
 def _clamp01(value: float) -> float:
     return max(0.0, min(value, 1.0))
+
+
+def _round_or_empty(value: float | str, digits: int) -> float | str:
+    if value == "":
+        return ""
+    return round(float(value), digits)
 
 
 def _normalize_flag_list(value: Any) -> list[str]:

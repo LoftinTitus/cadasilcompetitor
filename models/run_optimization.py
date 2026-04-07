@@ -13,10 +13,12 @@ if __package__ in {None, ""}:
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
     from models.optimization import DEFAULT_TARGET_FIELDS, propose_candidates
+    from models.screening_calibrator import try_load_screening_calibrator
     from models.surrogate import fit_bootstrap_surrogate
     from scoring.screening import load_candidates_from_csv
 else:
     from .optimization import DEFAULT_TARGET_FIELDS, propose_candidates
+    from .screening_calibrator import try_load_screening_calibrator
     from .surrogate import fit_bootstrap_surrogate
     from scoring.screening import load_candidates_from_csv
 
@@ -25,6 +27,7 @@ PROPOSAL_FIELDS = [
     "proposal_rank",
     "candidate_id",
     "sequence",
+    "proposal_source",
     "length",
     "approx_net_charge",
     "warning_flags",
@@ -32,6 +35,9 @@ PROPOSAL_FIELDS = [
     "acquisition_score",
     "novelty_score",
     "uncertainty_score",
+    "ml_screening_score",
+    "ml_predicted_composite_score",
+    "ml_screening_uncertainty",
     "predicted_composite_score",
     "pred_hs_affinity_reward",
     "pred_hs_selectivity_reward",
@@ -72,6 +78,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=50,
         help="Number of proposals to write.",
     )
+    parser.add_argument(
+        "--screening-calibrator",
+        default="reports/screening_calibrator.json",
+        help="Optional learned screening calibrator JSON.",
+    )
     return parser
 
 
@@ -85,15 +96,27 @@ def main() -> int:
         training_rows,
         target_fields=DEFAULT_TARGET_FIELDS,
     )
+    screening_calibrator = try_load_screening_calibrator(Path(args.screening_calibrator))
     proposals = propose_candidates(
         candidate_pool_rows,
         trained_surrogate=surrogate,
         reference_rows=training_rows,
+        screening_calibrator=screening_calibrator,
         top_k=args.top_k,
     )
+    if not proposals:
+        proposals = propose_candidates(
+            candidate_pool_rows,
+            trained_surrogate=surrogate,
+            reference_rows=training_rows,
+            screening_calibrator=screening_calibrator,
+            top_k=args.top_k,
+            allow_seen=True,
+        )
     _write_csv(Path(args.output), proposals, PROPOSAL_FIELDS)
     print(f"Training rows loaded: {len(training_rows)}")
     print(f"Candidate pool rows loaded: {len(candidate_pool_rows)}")
+    print(f"Screening calibrator loaded: {screening_calibrator is not None}")
     print(f"Proposals written: {len(proposals)}")
     print(f"Output CSV written to: {args.output}")
     return 0

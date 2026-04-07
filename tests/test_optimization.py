@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from models.optimization import DEFAULT_TARGET_FIELDS, pareto_frontier, propose_candidates
+from models.screening_calibrator import fit_screening_calibrator
 from models.surrogate import fit_bootstrap_surrogate
 
 
@@ -34,6 +35,7 @@ def _training_row(
         "sequence": sequence,
         "warning_flags": [],
         "filter_flags": [],
+        "screening_status": "pass" if composite >= 50.0 else "review",
         "hs_affinity_reward": hs_affinity_reward,
         "hs_selectivity_reward": hs_selectivity_reward,
         "transport_reward": transport_reward,
@@ -146,6 +148,60 @@ class OptimizationTests(unittest.TestCase):
         self.assertEqual([row["candidate_id"] for row in proposals], ["proposal_a", "proposal_b"])
         self.assertEqual(proposals[0]["filter_flags"], "")
         self.assertEqual(proposals[1]["warning_flags"], "cpp_like_uptake_risk")
+        self.assertEqual(proposals[0]["proposal_source"], "novel_pool")
+
+    def test_propose_candidates_uses_screening_calibrator_when_provided(self) -> None:
+        surrogate = fit_bootstrap_surrogate(
+            self.training_rows,
+            target_fields=DEFAULT_TARGET_FIELDS,
+            ensemble_size=5,
+            random_seed=13,
+        )
+        calibrator = fit_screening_calibrator(
+            self.training_rows,
+            ensemble_size=5,
+            random_seed=17,
+        )
+        candidate_pool = [
+            {
+                "candidate_id": "proposal_a",
+                "sequence": "AKRGRQKRRKA",
+                "warning_flags": [],
+                "filter_flags": [],
+            }
+        ]
+
+        proposals = propose_candidates(
+            candidate_pool,
+            trained_surrogate=surrogate,
+            reference_rows=self.training_rows,
+            screening_calibrator=calibrator,
+            top_k=10,
+        )
+
+        self.assertEqual(len(proposals), 1)
+        self.assertNotEqual(proposals[0]["ml_screening_score"], "")
+        self.assertNotEqual(proposals[0]["ml_predicted_composite_score"], "")
+        self.assertNotEqual(proposals[0]["ml_screening_uncertainty"], "")
+
+    def test_propose_candidates_can_rerank_seen_pool_when_allowed(self) -> None:
+        surrogate = fit_bootstrap_surrogate(
+            self.training_rows,
+            target_fields=DEFAULT_TARGET_FIELDS,
+            ensemble_size=5,
+            random_seed=13,
+        )
+
+        proposals = propose_candidates(
+            [{"candidate_id": "seen", "sequence": "AKRKRQGK", "filter_flags": []}],
+            trained_surrogate=surrogate,
+            reference_rows=self.training_rows,
+            top_k=10,
+            allow_seen=True,
+        )
+
+        self.assertEqual(len(proposals), 1)
+        self.assertEqual(proposals[0]["proposal_source"], "screened_rerank")
 
     def test_pareto_frontier_returns_only_non_dominated_rows(self) -> None:
         frontier = pareto_frontier(

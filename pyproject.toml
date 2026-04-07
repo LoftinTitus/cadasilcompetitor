@@ -24,6 +24,7 @@ classifiers = [
 cadasil-generate = "peptide.run_generation:main"
 cadasil-screen = "scoring.run_screening:main"
 cadasil-train-properties = "models.run_property_training:main"
+cadasil-calibrate-screening = "models.run_screening_calibration:main"
 cadasil-optimize = "models.run_optimization:main"
 cadasil-report = "reports.run_report:main"
 cadasil-validate-manifests = "core.run_manifest_validation:main"
